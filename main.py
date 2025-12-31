@@ -4,6 +4,7 @@ import base64
 import yaml
 import urllib.parse
 
+# 数据源列表
 URL_SOURCES = [
     "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/hysteria2/1/config.json",
     "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/hysteria2/2/config.json",
@@ -16,25 +17,14 @@ URL_SOURCES = [
     "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/clash.meta2/5/config.yaml",
     "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/clash.meta2/6/config.yaml",
     "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/singbox/1/config.json",
-    "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ip/singbox/2/config.json",
-    "https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/hysteria2/1/config.json",
-    "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ipp/hysteria2/2/config.json",
-    "https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/hysteria2/3/config.json",
-    "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ipp/hysteria2/4/config.json",
-    "https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/clash.meta2/1/config.yaml",
-    "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ipp/clash.meta2/2/config.yaml",
-    "https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/clash.meta2/3/config.yaml",
-    "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ipp/clash.meta2/4/config.yaml",
-    "https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/clash.meta2/5/config.yaml",
-    "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ipp/clash.meta2/6/config.yaml",
-    "https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/singbox/1/config.json",
-    "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ip/singbox/2/config.json"
+    "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ip/singbox/2/config.json"
 ]
 
 def parse_to_link(item):
     server = item.get('server') or item.get('add')
     port = item.get('port') or item.get('server_port') or item.get('port_num')
     
+    # 兼容处理 server:port 格式
     if server and ':' in str(server) and not port:
         if '[' in str(server):
             parts = str(server).split(']:')
@@ -50,21 +40,21 @@ def parse_to_link(item):
 
     tls_data = item.get('tls', {})
     if isinstance(tls_data, bool): tls_data = {}
-    sni = item.get('servername') or item.get('sni') or tls_data.get('server_name') or tls_data.get('sni') or "www.microsoft.com"
+    sni = item.get('servername') or item.get('sni') or tls_data.get('server_name') or tls_data.get('sni') or "www.bing.com"
     
-    # 对备注进行 URL 编码，解决 IPv6 导入失败问题
+    # 对备注进行 URL 编码
     raw_tag = f"{p_type.upper()}_{server}_{port}"
     node_name = urllib.parse.quote(raw_tag)
-    
     server_display = f"[{server}]" if ":" in str(server) and "[" not in str(server) and "," not in str(server) else server
 
-    # --- 按照你导入成功的样本进行精准适配 ---
+    # --- 协议精准适配逻辑 ---
     
+    # 1. Hysteria 2
     if p_type in ['hysteria2', 'hy2']:
         auth = item.get('auth') or item.get('password') or item.get('auth-str')
-        # 补全 insecure=1 和 allowInsecure=1
         return f"hysteria2://{auth}@{server_display}:{port}?sni={sni}&insecure=1&allowInsecure=1#{node_name}"
 
+    # 2. VLESS Reality
     elif p_type == 'vless':
         uuid = item.get('uuid') or item.get('id')
         link = f"vless://{uuid}@{server_display}:{port}?encryption=none&security=reality&sni={sni}"
@@ -74,14 +64,16 @@ def parse_to_link(item):
         sid = ropts.get('short-id') or rbox.get('short_id')
         if pbk: link += f"&pbk={pbk}"
         if sid: link += f"&sid={sid}"
-        # 补全 v2rayN 要求的传输层参数
         link += "&type=tcp&headerType=none"
         return f"{link}#{node_name}"
 
+    # 3. TUIC (基于你的成功样本优化)
     elif p_type == 'tuic':
         uuid = item.get('uuid') or item.get('id') or item.get('password')
-        return f"tuic://{uuid}@{server_display}:{port}?sni={sni}&alpn=h3&allowInsecure=1#{node_name}"
+        # 核心修改：使用 UUID%3AUUID 格式，并补全所有参数
+        return f"tuic://{uuid}%3A{uuid}@{server_display}:{port}?sni={sni}&alpn=h3&insecure=1&allowInsecure=1&congestion_control=bbr#{node_name}"
     
+    # 4. Hysteria 1
     elif p_type == 'hysteria':
         auth = item.get('auth') or item.get('auth-str')
         return f"hysteria://{server_display}:{port}?auth={auth}&sni={sni}&insecure=1&allowInsecure=1#{node_name}"
@@ -118,7 +110,7 @@ def main():
         with open("nodes.txt", "w", encoding="utf-8") as f: f.write(full_content)
         encoded_content = base64.b64encode(full_content.strip().encode("utf-8")).decode("utf-8")
         with open("sub.txt", "w", encoding="utf-8") as f: f.write(encoded_content)
-        print("✅ 脚本已根据成功样本完成更新！")
+        print("✅ TUIC 格式已修正为成功样本格式，请重新订阅！")
 
 if __name__ == "__main__":
     main()
