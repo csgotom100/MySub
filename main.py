@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 warnings.filterwarnings("ignore")
 
+# 订阅源列表
 URL_SOURCES = [
     "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/clash.meta2/1/config.yaml",
     "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/clash.meta2/2/config.yaml",
@@ -51,7 +52,6 @@ def get_node_info(item):
         pbk = reality_obj.get('public-key') or reality_obj.get('public_key') or item.get('public-key') or ""
         sid = reality_obj.get('short-id') or reality_obj.get('short_id') or item.get('short-id') or ""
         
-        # 提取用于去重的原始信息
         return {
             "server": server, "port": int(port), "type": p_type, 
             "sni": sni, "secret": secret, "pbk": pbk, "sid": sid, "raw_server": server_str
@@ -81,24 +81,25 @@ def main():
                 if node: raw_nodes_data.append(node)
         except: continue
 
-    # 1. 物理去重（完全相同的配置只保留一个）
+    # 1. 配置去重（确保不抓取完全重复的节点）
     unique_configs = []
     seen_configs = set()
     for n in raw_nodes_data:
-        config_key = (n['type'], n['raw_server'], n['secret'], n['sni'], n['pbk'])
+        # 唯一标识：类型+服务器+端口+密码+SNI+PBK
+        config_key = (n['type'], n['raw_server'], n['port'], n['secret'], n['sni'], n['pbk'])
         if config_key not in seen_configs:
             unique_configs.append(n)
             seen_configs.add(config_key)
 
-    # 2. 为去重后的节点生成【绝对唯一】的名称
+    # 2. 生成绝对唯一的备注名（引入自增序号）
     uri_links = []
     clash_proxies = []
     beijing_time = (datetime.utcnow() + timedelta(hours=8)).strftime("%H%M")
     
     for index, n in enumerate(unique_configs, start=1):
-        # 格式：协议_IP末段_序号_时间
+        # 命名格式：序号_协议_IP末段_时间 (序号 index 保证了绝对唯一)
         tag = n['server'].split('.')[-1].replace(']', '') if '.' in n['server'] else "v6"
-        node_name = f"{n['type'].upper()}_{tag}_{index:02d}_{beijing_time}"
+        node_name = f"{index:02d}_{n['type'].upper()}_{tag}_{beijing_time}"
         
         name_enc = urllib.parse.quote(node_name)
         srv_uri = f"[{n['server']}]" if (':' in n['server'] and not n['server'].startswith('[')) else n['server']
@@ -107,26 +108,20 @@ def main():
         if n["type"] == "hysteria2":
             sni_p = f"&sni={n['sni']}" if n['sni'] else ""
             uri_links.append(f"hysteria2://{n['secret']}@{srv_uri}:{n['port']}?insecure=1&allowInsecure=1{sni_p}#{name_enc}")
-            clash_proxies.append({"name": node_name, "type": "hysteria2", "server": srv_clash, "port": n["port"], "password": n["secret"], "tls": True, "sni": n["sni"], "skip-cert-verify": True})
+            clash_proxies.append({
+                "name": node_name, "type": "hysteria2", "server": srv_clash, "port": n["port"],
+                "password": n["secret"], "tls": True, "sni": n["sni"], "skip-cert-verify": True
+            })
         
         elif n["type"] == "vless" and n['pbk']:
             sni_p = f"&sni={n['sni']}" if n['sni'] else ""
             uri_links.append(f"vless://{n['secret']}@{srv_uri}:{n['port']}?encryption=none&security=reality&type=tcp&pbk={n['pbk']}&sid={n['sid']}{sni_p}#{name_enc}")
-            clash_proxies.append({"name": node_name, "type": "vless", "server": srv_clash, "port": n["port"], "uuid": n["secret"], "tls": True, "udp": True, "servername": n["sni"], "network": "tcp", "reality-opts": {"public-key": n["pbk"], "short-id": n["sid"]}, "client-fingerprint": "chrome"})
+            clash_proxies.append({
+                "name": node_name, "type": "vless", "server": srv_clash, "port": n["port"], "uuid": n["secret"],
+                "tls": True, "udp": True, "servername": n["sni"], "network": "tcp",
+                "reality-opts": {"public-key": n["pbk"], "short-id": n["sid"]}, "client-fingerprint": "chrome"
+            })
 
-    # 保存文件
+    # 保存 node.txt 和 base64 sub.txt
     with open("node.txt", "w", encoding="utf-8") as f: f.write("\n".join(uri_links))
-    with open("sub.txt", "w", encoding="utf-8") as f: f.write(base64.b64encode("\n".join(uri_links).encode()).decode())
-    
-    clash_config = {
-        "proxies": clash_proxies,
-        "proxy-groups": [{"name": "🚀 自动选择", "type": "url-test", "proxies": [p["name"] for p in clash_proxies], "url": "http://www.gstatic.com/generate_204", "interval": 300}],
-        "rules": ["MATCH,🚀 自动选择"]
-    }
-    with open("clash.yaml", "w", encoding="utf-8") as f:
-        yaml.dump(clash_config, f, allow_unicode=True, sort_keys=False)
-    
-    print(f"✅ 搞定！节点名通过序号强行唯一化。有效节点: {len(clash_proxies)}")
-
-if __name__ == "__main__":
-    main()
+    with open("sub.txt", "w", encoding="utf-8
