@@ -32,6 +32,7 @@ def get_node_info(item):
     if isinstance(tls_data, bool): tls_data = {}
     sni = item.get('servername') or item.get('sni') or tls_data.get('server_name') or tls_data.get('sni') or "www.microsoft.com"
     
+    # 备注格式：协议_地址末段_北京时间
     addr_short = str(server).split('.')[-1] if '.' in str(server) else "v6"
     name = f"{p_type.upper()}_{addr_short}_{beijing_time}"
     
@@ -43,7 +44,7 @@ def get_node_info(item):
     }
 
 def create_clash_proxy(info):
-    """转换为 Clash 节点字典"""
+    """转换为 Clash Meta (Mihomo) 节点字典"""
     p = {
         "name": info["name"],
         "server": info["server"],
@@ -70,9 +71,9 @@ def create_clash_proxy(info):
     elif info["type"] == 'tuic':
         p["type"] = "tuic"
         p["uuid"] = info["uuid"]
-        p["password"] = info["uuid"]
+        p["password"] = info["uuid"] # 大部分源 UUID 与 Password 相同
         p["alpn"] = ["h3"]
-        p["congestion-controller"] = "cubic" # 对应截图中的配置
+        p["congestion-controller"] = "cubic" # 根据你的截图设置为 cubic
     elif info["type"] == 'hysteria':
         p["type"] = "hysteria"
         p["auth_str"] = info["auth"]
@@ -101,9 +102,11 @@ def main():
                 if info: nodes_data.append(info)
         except: continue
 
-    if not nodes_data: return
+    if not nodes_data: 
+        print("未获取到节点数据")
+        return
 
-    # 生成通用 URI (node.txt & sub.txt)
+    # 1. 生成通用链接 (node.txt & sub.txt)
     links = []
     for info in nodes_data:
         name_enc = urllib.parse.quote(info["name"])
@@ -121,12 +124,16 @@ def main():
             links.append(f"vless://{info['uuid']}@{srv}:{info['port']}?encryption=none&security=reality&sni={info['sni']}&pbk={pbk}&sid={sid}&type=tcp&headerType=none#{name_enc}")
 
     unique_links = sorted(list(set(links)))
+    
+    # 写入 node.txt (明文)
     with open("node.txt", "w", encoding="utf-8") as f:
         f.write("\n".join(unique_links))
+        
+    # 写入 sub.txt (Base64)
     with open("sub.txt", "w", encoding="utf-8") as f:
         f.write(base64.b64encode("\n".join(unique_links).encode()).decode())
 
-    # 生成 Clash
+    # 2. 生成 Clash YAML
     clash_proxies = []
     seen_names = set()
     for n in nodes_data:
@@ -137,13 +144,16 @@ def main():
 
     clash_config = {
         "proxies": clash_proxies,
-        "proxy-groups": [{"name": "🚀 节点选择", "type": "select", "proxies": [p["name"] for p in clash_proxies] + ["DIRECT"]}],
+        "proxy-groups": [
+            {"name": "🚀 节点选择", "type": "select", "proxies": [p["name"] for p in clash_proxies] + ["DIRECT"]},
+            {"name": "⚡ 自动选择", "type": "url-test", "url": "http://www.gstatic.com/generate_204", "interval": 300, "proxies": [p["name"] for p in clash_proxies]}
+        ],
         "rules": ["MATCH,🚀 节点选择"]
     }
     with open("clash.yaml", "w", encoding="utf-8") as f:
         yaml.dump(clash_config, f, allow_unicode=True, sort_keys=False)
 
-    print(f"✅ 修复完成！时间：{beijing_time}")
+    print(f"✅ 生成成功！ node.txt, sub.txt, clash.yaml 已更新。北京时间：{beijing_time}")
 
 if __name__ == "__main__":
     main()
