@@ -15,15 +15,7 @@ URL_SOURCES = [
     "https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/hysteria2/1/config.json",
     "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ipp/hysteria2/2/config.json",
     "https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/hysteria2/3/config.json",
-    "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ipp/hysteria2/4/config.json",
-    "https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/clash.meta2/1/config.yaml",
-    "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ipp/clash.meta2/2/config.yaml",
-    "https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/clash.meta2/3/config.yaml",
-    "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ipp/clash.meta2/4/config.yaml",
-    "https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/clash.meta2/5/config.yaml",
-    "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ipp/clash.meta2/6/config.yaml",
-    "https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/singbox/1/config.json",
-    "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ip/singbox/2/config.json"
+    "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ipp/hysteria2/4/config.json"
 ]
 
 beijing_time = (datetime.utcnow() + timedelta(hours=8)).strftime("%m%d-%H%M")
@@ -35,27 +27,27 @@ def get_node_info(item):
         port_raw = item.get('port') or item.get('server_port') or item.get('port_num')
         if not server or not port_raw: return None
 
-        # 端口处理：如果是范围（1000-2000），取第一个
         port = str(port_raw).split(',')[0].split('-')[0].strip()
-        
         p_type = str(item.get('type', '')).lower()
         
-        # 识别凭据
-        if 'auth_str' in item or 'auth-str' in item or p_type in ['hy2', 'hysteria2']:
-            p_type = 'hysteria2'
-            secret = item.get('auth_str') or item.get('auth-str') or item.get('auth') or item.get('password')
-        else:
-            secret = item.get('uuid') or item.get('id') or item.get('password')
-
+        # --- 仿照成功案例的密码提取策略 ---
+        # 优先寻找 auth_str (dongtaiwang.com 常见的存放处)
+        secret = item.get('auth_str') or item.get('auth-str') or item.get('password') or item.get('auth') or item.get('uuid')
+        
         if not secret: return None
 
-        # SNI 和传输层
+        # 识别协议
+        if 'auth' in str(item) or 'hy2' in p_type or 'hysteria2' in p_type:
+            p_type = 'hysteria2'
+        elif 'uuid' in item:
+            p_type = 'vless'
+
+        # SNI 必须保持，如果没有则强制使用 microsoft
         tls_obj = item.get('tls', {})
         if not isinstance(tls_obj, dict): tls_obj = {}
         sni = item.get('servername') or item.get('sni') or tls_obj.get('server_name') or "www.microsoft.com"
         
-        # 备注
-        addr_tag = str(server).split('.')[-1].replace(']', '') if '.' in str(server) else "v6"
+        addr_tag = str(server).split('.')[-1].replace(']', '')
         name = f"{p_type.upper()}_{addr_tag}_{beijing_time}"
         
         return {
@@ -66,7 +58,7 @@ def get_node_info(item):
 
 def main():
     nodes_list = []
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+    headers = {'User-Agent': 'Mozilla/5.0'}
 
     for url in URL_SOURCES:
         try:
@@ -79,7 +71,7 @@ def main():
             
             def find_proxies(obj):
                 if isinstance(obj, dict):
-                    if any(k in obj for k in ['server', 'add', 'address']):
+                    if any(k in obj for k in ['server', 'add']):
                         node = get_node_info(obj)
                         if node: nodes_list.append(node)
                     for v in obj.values(): find_proxies(v)
@@ -88,9 +80,6 @@ def main():
             find_proxies(data)
         except: continue
 
-    if not nodes_list: return
-
-    # 去重
     unique_nodes = []
     seen = set()
     for n in nodes_list:
@@ -106,20 +95,16 @@ def main():
         name_enc = urllib.parse.quote(n["name"])
         srv = f"[{n['server']}]" if ":" in str(n['server']) and "[" not in str(n['server']) else n['server']
         
-        # HY2 拼接补充：加入 insecure=1 参数
         if n["type"] == "hysteria2":
-            links.append(f"hysteria2://{n['secret']}@{srv}:{n['port']}?sni={n['sni']}&insecure=1&mport={n['port']}#{name_enc}")
+            # 这里的参数完全对齐你提供的成功样本
+            links.append(f"hysteria2://{n['secret']}@{srv}:{n['port']}?sni={n['sni']}&insecure=1&allowInsecure=1#{name_enc}")
             clash_proxies.append({
                 "name": n["name"], "type": "hysteria2", "server": n["server"], "port": n["port"],
-                "password": n["secret"], "tls": True, "sni": n["sni"], "skip-cert-verify": True,
-                "fast-open": True, "udp": True
+                "password": n["secret"], "tls": True, "sni": n["sni"], "skip-cert-verify": True
             })
         
-        elif n["type"] == "tuic":
-            links.append(f"tuic://{n['secret']}%3A{n['secret']}@{srv}:{n['port']}?sni={n['sni']}&alpn=h3&congestion_control=cubic#{name_enc}")
-            clash_proxies.append({"name": n["name"], "type": "tuic", "server": n["server"], "port": n["port"], "uuid": n["secret"], "password": n["secret"], "alpn": ["h3"], "tls": True, "sni": n["sni"], "skip-cert-verify": True, "udp": True})
-        
         elif n["type"] == "vless":
+            # 保持原有 VLESS 逻辑
             raw = n["raw"]
             tls_obj = raw.get('tls', {}) if isinstance(raw.get('tls'), dict) else {}
             ro = raw.get('reality-opts') or tls_obj.get('reality', {})
@@ -128,17 +113,10 @@ def main():
             links.append(f"vless://{n['secret']}@{srv}:{n['port']}?encryption=none&security=reality&sni={n['sni']}&pbk={pbk}&sid={sid}&type=tcp&headerType=none#{name_enc}")
             clash_proxies.append({"name": n["name"], "type": "vless", "server": n["server"], "port": n["port"], "uuid": n["secret"], "network": "tcp", "tls": True, "udp": True, "sni": n["sni"], "skip-cert-verify": True})
 
+    # 写入文件
     with open("node.txt", "w", encoding="utf-8") as f: f.write("\n".join(links))
     with open("sub.txt", "w", encoding="utf-8") as f: f.write(base64.b64encode("\n".join(links).encode()).decode())
-    
-    conf = {
-        "proxies": clash_proxies,
-        "proxy-groups": [{"name": "🚀 节点选择", "type": "select", "proxies": [x["name"] for x in clash_proxies] + ["DIRECT"]}],
-        "rules": ["MATCH,🚀 节点选择"]
-    }
-    with open("clash.yaml", "w", encoding="utf-8") as f: yaml.dump(conf, f, allow_unicode=True, sort_keys=False)
-
-    print(f"✅ 执行完成！当前总节点: {len(clash_proxies)}")
+    with open("clash.yaml", "w", encoding="utf-8") as f: yaml.dump({"proxies": clash_proxies}, f, allow_unicode=True)
 
 if __name__ == "__main__":
     main()
