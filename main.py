@@ -1,10 +1,8 @@
 import json, requests, base64, yaml, urllib.parse, warnings
 from datetime import datetime, timedelta
 
-# 禁用不必要的安全警告
 warnings.filterwarnings("ignore")
 
-# 数据源列表
 URL_SOURCES = [
     "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/clash.meta2/1/config.yaml",
     "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/clash.meta2/2/config.yaml",
@@ -19,21 +17,16 @@ URL_SOURCES = [
 beijing_time = (datetime.utcnow() + timedelta(hours=8)).strftime("%m%d-%H%M")
 
 def get_node_info(item):
-    """
-    严格按照 Alvin9999 的 JSON 结构解析节点信息
-    """
     try:
         if not isinstance(item, dict): return None
         
-        # 1. 提取服务器地址与端口
-        # 针对格式: "server": "157.254.223.43:27921,28000-29000"
         raw_server = item.get('server') or item.get('add') or item.get('address')
         if not raw_server: return None
         
+        # 1. 提取 IP 和 端口
         if ':' in str(raw_server):
             parts = str(raw_server).split(':')
             server = parts[0]
-            # 端口处理: 取冒号后第一个逗号或横杠前的数字
             port_part = parts[1].split(',')[0].split('-')[0].strip()
         else:
             server = raw_server
@@ -41,12 +34,12 @@ def get_node_info(item):
         
         if not server or not port_part: return None
 
-        # 2. 提取密码/凭据 (针对 Hysteria2 的 auth 字段)
+        # 2. 凭据提取 (auth 优先)
         secret = item.get('auth') or item.get('auth_str') or item.get('auth-str') or \
                  item.get('password') or item.get('uuid') or item.get('id')
         if not secret: return None
 
-        # 3. 确定协议类型
+        # 3. 协议判定 (放宽判定条件，防止漏掉)
         p_type = str(item.get('type', '')).lower()
         if 'auth' in item or 'hy2' in p_type or 'hysteria2' in p_type:
             p_type = 'hysteria2'
@@ -55,41 +48,41 @@ def get_node_info(item):
         elif 'tuic' in p_type:
             p_type = 'tuic'
         else:
-            return None # 过滤掉 socks5, dns 等无关项
+            # 如果没有明确 type 但有 auth，默认给 hy2
+            if 'auth' in item: p_type = 'hysteria2'
+            else: return None
 
-        # 4. 提取 SNI (深度穿透 tls 层级)
+        # 4. SNI 提取
         tls_obj = item.get('tls', {})
         if not isinstance(tls_obj, dict): tls_obj = {}
         sni = item.get('servername') or item.get('sni') or \
               tls_obj.get('sni') or tls_obj.get('server_name') or ""
         
-        # 5. 生成节点名称
-        addr_tag = server.split('.')[-1].replace(']', '')
+        # 备注加上端口末尾，防止重名
+        addr_tag = f"{server.split('.')[-1]}_{port_part}"
         name = f"{p_type.upper()}_{addr_tag}_{beijing_time}"
         
         return {
             "name": name, "server": server, "port": int(port_part), 
-            "type": p_type, "sni": sni, "secret": secret, "raw": item
+            "type": p_type, "sni": sni, "secret": secret, "raw_server_str": str(raw_server), "raw": item
         }
     except:
         return None
 
 def main():
     all_extracted_nodes = []
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    headers = {'User-Agent': 'Mozilla/5.0'}
 
     for url in URL_SOURCES:
         try:
             r = requests.get(url, headers=headers, timeout=15, verify=False)
             if r.status_code != 200: continue
             
-            # 解析内容 (JSON 或 YAML)
             try:
                 data = json.loads(r.text)
             except:
                 data = yaml.safe_load(r.text)
             
-            # 递归搜索包含 server 关键词的字典块
             def find_nodes_recursive(obj):
                 if isinstance(obj, dict):
                     if any(k in obj for k in ['server', 'add', 'address']):
@@ -100,26 +93,24 @@ def main():
                     for i in obj: find_nodes_recursive(i)
             
             find_nodes_recursive(data)
-        except Exception as e:
-            print(f"Error fetching {url}: {e}")
-            continue
+        except: continue
 
-    # 按照 IP:端口 进行去重
+    # --- 改进的去重逻辑 ---
     unique_nodes = []
-    seen_addresses = set()
+    seen_identifiers = set()
     for n in all_extracted_nodes:
-        addr_key = f"{n['server']}:{n['port']}"
-        if addr_key not in seen_addresses:
+        # 使用 协议 + 原始服务器地址字符串 作为唯一标识
+        # 这样即使 IP 相同但端口跳跃范围不同的节点也会被保留
+        identifier = f"{n['type']}_{n['raw_server_str']}"
+        if identifier not in seen_identifiers:
             unique_nodes.append(n)
-            seen_addresses.add(addr_key)
+            seen_identifiers.add(identifier)
 
-    # 生成各格式订阅文件
     uri_links = []
     clash_proxies = []
 
     for n in unique_nodes:
         name_enc = urllib.parse.quote(n["name"])
-        # 处理 IPv6 地址格式
         srv_display = f"[{n['server']}]" if ":" in str(n['server']) and "[" not in str(n['server']) else n['server']
         
         if n["type"] == "hysteria2":
@@ -143,23 +134,13 @@ def main():
                 "uuid": n["secret"], "network": "tcp", "tls": True, "udp": True, "sni": n["sni"], "skip-cert-verify": True
             })
 
-    # 保存结果
-    with open("node.txt", "w", encoding="utf-8") as f:
-        f.write("\n".join(uri_links))
+    with open("node.txt", "w", encoding="utf-8") as f: f.write("\n".join(uri_links))
+    with open("sub.txt", "w", encoding="utf-8") as f: f.write(base64.b64encode("\n".join(uri_links).encode()).decode())
     
-    with open("sub.txt", "w", encoding="utf-8") as f:
-        f.write(base64.b64encode("\n".join(uri_links).encode()).decode())
-    
-    # 简单的 Clash 配置文件生成
-    clash_config = {
-        "proxies": clash_proxies,
-        "proxy-groups": [{"name": "🚀 节点选择", "type": "select", "proxies": [p["name"] for p in clash_proxies] + ["DIRECT"]}],
-        "rules": ["MATCH,🚀 节点选择"]
-    }
     with open("clash.yaml", "w", encoding="utf-8") as f:
-        yaml.dump(clash_config, f, allow_unicode=True, sort_keys=False)
+        yaml.dump({"proxies": clash_proxies}, f, allow_unicode=True, sort_keys=False)
 
-    print(f"✅ 处理完成! 原始节点总数: {len(all_extracted_nodes)}, 去重后有效节点: {len(clash_proxies)}")
+    print(f"✅ 完成! 提取并保留了 {len(unique_nodes)} 个节点")
 
 if __name__ == "__main__":
     main()
