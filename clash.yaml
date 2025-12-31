@@ -1,5 +1,5 @@
 proxies:
-- name: VLESS_13_1231-1930
+- name: VLESS_13_17401_1231-1934
   type: vless
   server: 195.154.200.13
   port: 17401
@@ -9,7 +9,7 @@ proxies:
   udp: true
   sni: itunes.apple.com
   skip-cert-verify: true
-- name: VLESS_44_1231-1930
+- name: VLESS_44_18959_1231-1934
   type: vless
   server: 157.254.223.44
   port: 18959
@@ -19,7 +19,7 @@ proxies:
   udp: true
   sni: itunes.apple.com
   skip-cert-verify: true
-- name: HYSTERIA2_43_1231-1930
+- name: HYSTERIA2_43_27921_1231-1934
   type: hysteria2
   server: 157.254.223.43
   port: 27921
@@ -27,7 +27,7 @@ proxies:
   tls: true
   sni: apple.com
   skip-cert-verify: true
-- name: HYSTERIA2_146_1231-1930
+- name: HYSTERIA2_146_22000_1231-1934
   type: hysteria2
   server: 62.210.124.146
   port: 22000
@@ -35,14 +35,3 @@ proxies:
   tls: true
   sni: www.microsoft.com
   skip-cert-verify: true
-proxy-groups:
-- name: 🚀 节点选择
-  type: select
-  proxies:
-  - VLESS_13_1231-1930
-  - VLESS_44_1231-1930
-  - HYSTERIA2_43_1231-1930
-  - HYSTERIA2_146_1231-1930
-  - DIRECT
-rules:
-- MATCH,🚀 节点选择
