@@ -21,65 +21,84 @@ URL_SOURCES = [
 beijing_time = (datetime.utcnow() + timedelta(hours=8)).strftime("%m%d-%H%M")
 
 def get_node_info(item):
+    """
+    严格按照 JSON 字典内容提取，不进行硬编码猜测
+    """
     try:
         if not isinstance(item, dict): return None
+        
+        # 提取地址和端口
         server = item.get('server') or item.get('add') or item.get('address')
         port_raw = item.get('port') or item.get('server_port') or item.get('port_num')
         if not server or not port_raw: return None
-
+        
+        # 端口格式化（处理范围端口）
         port = str(port_raw).split(',')[0].split('-')[0].strip()
+        
+        # 协议类型
         p_type = str(item.get('type', '')).lower()
         
-        # --- 仿照成功案例的密码提取策略 ---
-        # 优先寻找 auth_str (dongtaiwang.com 常见的存放处)
-        secret = item.get('auth_str') or item.get('auth-str') or item.get('password') or item.get('auth') or item.get('uuid')
-        
+        # --- 核心凭据提取逻辑 ---
+        # 1. 如果是 Hysteria2，依次寻找 auth_str, password, auth
+        if p_type in ['hy2', 'hysteria2'] or 'auth_str' in item or 'auth-str' in item:
+            p_type = 'hysteria2'
+            secret = item.get('auth_str') or item.get('auth-str') or item.get('password') or item.get('auth')
+        # 2. 如果是 VLESS/TUIC，依次寻找 uuid, id, password
+        else:
+            secret = item.get('uuid') or item.get('id') or item.get('password')
+
         if not secret: return None
 
-        # 识别协议
-        if 'auth' in str(item) or 'hy2' in p_type or 'hysteria2' in p_type:
-            p_type = 'hysteria2'
-        elif 'uuid' in item:
-            p_type = 'vless'
-
-        # SNI 必须保持，如果没有则强制使用 microsoft
+        # 3. 提取 TLS/SNI 相关
         tls_obj = item.get('tls', {})
         if not isinstance(tls_obj, dict): tls_obj = {}
-        sni = item.get('servername') or item.get('sni') or tls_obj.get('server_name') or "www.microsoft.com"
+        # 优先级：item直接定义的sni > tls对象内的server_name > 默认值
+        sni = item.get('servername') or item.get('sni') or tls_obj.get('server_name') or tls_obj.get('sni') or ""
         
+        insecure = 1 if (item.get('skip-cert-verify') or tls_obj.get('insecure') or True) else 0
+
         addr_tag = str(server).split('.')[-1].replace(']', '')
         name = f"{p_type.upper()}_{addr_tag}_{beijing_time}"
         
         return {
             "name": name, "server": server, "port": int(port), "type": p_type,
-            "sni": sni, "secret": secret, "raw": item
+            "sni": sni, "secret": secret, "insecure": insecure, "raw": item
         }
-    except: return None
+    except:
+        return None
 
 def main():
     nodes_list = []
-    headers = {'User-Agent': 'Mozilla/5.0'}
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
 
     for url in URL_SOURCES:
         try:
-            r = requests.get(url, headers=headers, timeout=10, verify=False)
+            r = requests.get(url, headers=headers, timeout=12, verify=False)
             if r.status_code != 200: continue
+            
+            # 解析内容
             try:
                 data = json.loads(r.text)
             except:
                 data = yaml.safe_load(r.text)
             
+            # 深度优先搜索所有包含 server 关键词的字典
             def find_proxies(obj):
                 if isinstance(obj, dict):
-                    if any(k in obj for k in ['server', 'add']):
+                    if any(k in obj for k in ['server', 'add', 'address']):
                         node = get_node_info(obj)
                         if node: nodes_list.append(node)
                     for v in obj.values(): find_proxies(v)
                 elif isinstance(obj, list):
                     for i in obj: find_proxies(i)
+            
             find_proxies(data)
-        except: continue
+        except:
+            continue
 
+    if not nodes_list: return
+
+    # 去重
     unique_nodes = []
     seen = set()
     for n in nodes_list:
@@ -88,35 +107,12 @@ def main():
             unique_nodes.append(n)
             seen.add(key)
 
-    links = []
+    # 格式化输出
+    uri_links = []
     clash_proxies = []
 
     for n in unique_nodes:
         name_enc = urllib.parse.quote(n["name"])
         srv = f"[{n['server']}]" if ":" in str(n['server']) and "[" not in str(n['server']) else n['server']
         
-        if n["type"] == "hysteria2":
-            # 这里的参数完全对齐你提供的成功样本
-            links.append(f"hysteria2://{n['secret']}@{srv}:{n['port']}?sni={n['sni']}&insecure=1&allowInsecure=1#{name_enc}")
-            clash_proxies.append({
-                "name": n["name"], "type": "hysteria2", "server": n["server"], "port": n["port"],
-                "password": n["secret"], "tls": True, "sni": n["sni"], "skip-cert-verify": True
-            })
-        
-        elif n["type"] == "vless":
-            # 保持原有 VLESS 逻辑
-            raw = n["raw"]
-            tls_obj = raw.get('tls', {}) if isinstance(raw.get('tls'), dict) else {}
-            ro = raw.get('reality-opts') or tls_obj.get('reality', {})
-            pbk = ro.get('public-key') or ro.get('public_key', '')
-            sid = ro.get('short-id') or ro.get('short_id', '')
-            links.append(f"vless://{n['secret']}@{srv}:{n['port']}?encryption=none&security=reality&sni={n['sni']}&pbk={pbk}&sid={sid}&type=tcp&headerType=none#{name_enc}")
-            clash_proxies.append({"name": n["name"], "type": "vless", "server": n["server"], "port": n["port"], "uuid": n["secret"], "network": "tcp", "tls": True, "udp": True, "sni": n["sni"], "skip-cert-verify": True})
-
-    # 写入文件
-    with open("node.txt", "w", encoding="utf-8") as f: f.write("\n".join(links))
-    with open("sub.txt", "w", encoding="utf-8") as f: f.write(base64.b64encode("\n".join(links).encode()).decode())
-    with open("clash.yaml", "w", encoding="utf-8") as f: yaml.dump({"proxies": clash_proxies}, f, allow_unicode=True)
-
-if __name__ == "__main__":
-    main()
+        if n["type"] == "hyst
