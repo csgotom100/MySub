@@ -1,2 +1,2 @@
-tuic://66d37a65-7f6f-4e7c-a0f6-163bd917756a@2a14:7583:299d::a:33457?sni=apple.com&insecure=1&alpn=h3#Node_1
-tuic://66d37a65-7f6f-4e7c-a0f6-163bd917756a@89.144.35.231:33457?sni=apple.com&insecure=1&alpn=h3#Node_2
+tuic://66d37a65-7f6f-4e7c-a0f6-163bd917756a@89.144.35.231:33457?sni=apple.com&insecure=1&alpn=h3#Node_1
+tuic://66d37a65-7f6f-4e7c-a0f6-163bd917756a@[2a14:7583:299d::a]:33457?sni=apple.com&insecure=1&alpn=h3#Node_2
