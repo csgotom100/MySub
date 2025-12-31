@@ -1,144 +1,111 @@
 proxies:
-- name: HYSTERIA2_33_1231-1904
-  type: hysteria2
-  server: 5.178.101.33
+- name: HYSTERIA2_33_1231-1910
+  password: dongtaiwang.com
   port: 23008
-  password: dongtaiwang.com
-  tls: true
-  sni: apple.com
+  server: 5.178.101.33
   skip-cert-verify: true
-  fast-open: true
-  udp: true
-- name: VLESS_13_1231-1904
-  type: vless
+  sni: apple.com
+  tls: true
+  type: hysteria2
+- name: VLESS_13_1231-1910
+  network: tcp
+  port: 17401
   server: 195.154.200.13
-  port: 17401
-  uuid: add14a5b-f648-4423-8a1f-8b8f54c0daef
-  network: tcp
-  tls: true
-  udp: true
-  sni: itunes.apple.com
   skip-cert-verify: true
-- name: HYSTERIA2_xyz_1231-1904
-  type: hysteria2
+  sni: itunes.apple.com
+  tls: true
+  type: vless
+  udp: true
+  uuid: add14a5b-f648-4423-8a1f-8b8f54c0daef
+- name: HYSTERIA2_xyz_1231-1910
+  password: dongtaiwang.com
+  port: 20001
   server: ipv4.758733.xyz
-  port: 20001
-  password: dongtaiwang.com
-  tls: true
-  sni: apple.com
   skip-cert-verify: true
-  fast-open: true
-  udp: true
-- name: HYSTERIA2_v6_1231-1904
+  sni: apple.com
+  tls: true
   type: hysteria2
+- name: HYSTERIA2_2001:bc8:32d7:402::3_1231-1910
+  password: dongtaiwang.com
+  port: 20001
   server: 2001:bc8:32d7:402::3
-  port: 20001
-  password: dongtaiwang.com
-  tls: true
-  sni: apple.com
   skip-cert-verify: true
-  fast-open: true
-  udp: true
-- name: HYSTERIA2_v6_1231-1904
+  sni: apple.com
+  tls: true
   type: hysteria2
+- name: HYSTERIA2_2001:bc8:32d7:402::4_1231-1910
+  password: dongtaiwang.com
+  port: 20001
   server: 2001:bc8:32d7:402::4
-  port: 20001
-  password: dongtaiwang.com
-  tls: true
+  skip-cert-verify: true
   sni: apple.com
-  skip-cert-verify: true
-  fast-open: true
-  udp: true
-- name: VLESS_v6_1231-1904
-  type: vless
-  server: 2001:bc8:32d7:181::2
-  port: 17401
-  uuid: add14a5b-f648-4423-8a1f-8b8f54c0daef
-  network: tcp
   tls: true
-  udp: true
-  sni: itunes.apple.com
-  skip-cert-verify: true
-- name: VLESS_v6_1231-1904
-  type: vless
-  server: 2001:bc8:32d7:181::3
-  port: 17401
-  uuid: add14a5b-f648-4423-8a1f-8b8f54c0daef
-  network: tcp
-  tls: true
-  udp: true
-  sni: itunes.apple.com
-  skip-cert-verify: true
-- name: TUIC_231_1231-1904
-  type: tuic
-  server: 89.144.35.231
-  port: 33457
-  uuid: 66d37a65-7f6f-4e7c-a0f6-163bd917756a
-  password: 66d37a65-7f6f-4e7c-a0f6-163bd917756a
-  alpn:
-  - h3
-  tls: true
-  sni: apple.com
-  skip-cert-verify: true
-  udp: true
-- name: TUIC_v6_1231-1904
-  type: tuic
-  server: 2a14:7583:299d::a
-  port: 33457
-  uuid: 66d37a65-7f6f-4e7c-a0f6-163bd917756a
-  password: 66d37a65-7f6f-4e7c-a0f6-163bd917756a
-  alpn:
-  - h3
-  tls: true
-  sni: apple.com
-  skip-cert-verify: true
-  udp: true
-- name: HYSTERIA2_v6_1231-1904
   type: hysteria2
-  server: 2001:bc8:32d7:14f::4
-  port: 23880
+- name: VLESS_2001:bc8:32d7:181::2_1231-1910
+  network: tcp
+  port: 17401
+  server: 2001:bc8:32d7:181::2
+  skip-cert-verify: true
+  sni: itunes.apple.com
+  tls: true
+  type: vless
+  udp: true
+  uuid: add14a5b-f648-4423-8a1f-8b8f54c0daef
+- name: VLESS_2001:bc8:32d7:181::3_1231-1910
+  network: tcp
+  port: 17401
+  server: 2001:bc8:32d7:181::3
+  skip-cert-verify: true
+  sni: itunes.apple.com
+  tls: true
+  type: vless
+  udp: true
+  uuid: add14a5b-f648-4423-8a1f-8b8f54c0daef
+- name: VLESS_231_1231-1910
+  network: tcp
+  port: 33457
+  server: 89.144.35.231
+  skip-cert-verify: true
+  sni: apple.com
+  tls: true
+  type: vless
+  udp: true
+  uuid: dongtaiwang.com
+- name: VLESS_2a14:7583:299d::a_1231-1910
+  network: tcp
+  port: 33457
+  server: 2a14:7583:299d::a
+  skip-cert-verify: true
+  sni: apple.com
+  tls: true
+  type: vless
+  udp: true
+  uuid: dongtaiwang.com
+- name: HYSTERIA2_2001:bc8:32d7:14f::4_1231-1910
   password: dongtaiwang.com
-  tls: true
+  port: 23880
+  server: 2001:bc8:32d7:14f::4
+  skip-cert-verify: true
   sni: bing.com
-  skip-cert-verify: true
-  fast-open: true
-  udp: true
-- name: VLESS_44_1231-1904
-  type: vless
-  server: 157.254.223.44
+  tls: true
+  type: hysteria2
+- name: VLESS_44_1231-1910
+  network: tcp
   port: 18959
-  uuid: d0b3e27d-bbfc-4a3b-8e60-6973de8fcefa
-  network: tcp
-  tls: true
-  udp: true
-  sni: itunes.apple.com
+  server: 157.254.223.44
   skip-cert-verify: true
-- name: VLESS_232_1231-1904
+  sni: itunes.apple.com
+  tls: true
   type: vless
-  server: 89.144.35.232
-  port: 18952
-  uuid: 939db115-dea1-4806-a9fc-bd4e6c0213a4
-  network: tcp
-  tls: true
   udp: true
-  sni: itunes.apple.com
+  uuid: d0b3e27d-bbfc-4a3b-8e60-6973de8fcefa
+- name: VLESS_232_1231-1910
+  network: tcp
+  port: 18952
+  server: 89.144.35.232
   skip-cert-verify: true
-proxy-groups:
-- name: 🚀 节点选择
-  type: select
-  proxies:
-  - HYSTERIA2_33_1231-1904
-  - VLESS_13_1231-1904
-  - HYSTERIA2_xyz_1231-1904
-  - HYSTERIA2_v6_1231-1904
-  - HYSTERIA2_v6_1231-1904
-  - VLESS_v6_1231-1904
-  - VLESS_v6_1231-1904
-  - TUIC_231_1231-1904
-  - TUIC_v6_1231-1904
-  - HYSTERIA2_v6_1231-1904
-  - VLESS_44_1231-1904
-  - VLESS_232_1231-1904
-  - DIRECT
-rules:
-- MATCH,🚀 节点选择
+  sni: itunes.apple.com
+  tls: true
+  type: vless
+  udp: true
+  uuid: 939db115-dea1-4806-a9fc-bd4e6c0213a4
