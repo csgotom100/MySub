@@ -1,13 +1,5 @@
 proxies:
-- name: HYSTERIA2_33_1231-1918
-  type: hysteria2
-  server: 5.178.101.33
-  port: 23008
-  password: dongtaiwang.com
-  tls: true
-  skip-cert-verify: true
-  sni: apple.com
-- name: VLESS_13_1231-1918
+- name: VLESS_13_1231-1930
   type: vless
   server: 195.154.200.13
   port: 17401
@@ -17,83 +9,7 @@ proxies:
   udp: true
   sni: itunes.apple.com
   skip-cert-verify: true
-- name: HYSTERIA2_xyz_1231-1918
-  type: hysteria2
-  server: ipv4.758733.xyz
-  port: 20001
-  password: dongtaiwang.com
-  tls: true
-  skip-cert-verify: true
-  sni: apple.com
-- name: HYSTERIA2_2001:bc8:32d7:402::3_1231-1918
-  type: hysteria2
-  server: 2001:bc8:32d7:402::3
-  port: 20001
-  password: dongtaiwang.com
-  tls: true
-  skip-cert-verify: true
-  sni: apple.com
-- name: HYSTERIA2_2001:bc8:32d7:402::4_1231-1918
-  type: hysteria2
-  server: 2001:bc8:32d7:402::4
-  port: 20001
-  password: dongtaiwang.com
-  tls: true
-  skip-cert-verify: true
-  sni: apple.com
-- name: VLESS_2001:bc8:32d7:181::2_1231-1918
-  type: vless
-  server: 2001:bc8:32d7:181::2
-  port: 17401
-  uuid: add14a5b-f648-4423-8a1f-8b8f54c0daef
-  network: tcp
-  tls: true
-  udp: true
-  sni: itunes.apple.com
-  skip-cert-verify: true
-- name: VLESS_2001:bc8:32d7:181::3_1231-1918
-  type: vless
-  server: 2001:bc8:32d7:181::3
-  port: 17401
-  uuid: add14a5b-f648-4423-8a1f-8b8f54c0daef
-  network: tcp
-  tls: true
-  udp: true
-  sni: itunes.apple.com
-  skip-cert-verify: true
-- name: TUIC_231_1231-1918
-  type: tuic
-  server: 89.144.35.231
-  port: 33457
-  uuid: 66d37a65-7f6f-4e7c-a0f6-163bd917756a
-  password: 66d37a65-7f6f-4e7c-a0f6-163bd917756a
-  alpn:
-  - h3
-  tls: true
-  sni: apple.com
-  skip-cert-verify: true
-  udp: true
-- name: TUIC_2a14:7583:299d::a_1231-1918
-  type: tuic
-  server: 2a14:7583:299d::a
-  port: 33457
-  uuid: 66d37a65-7f6f-4e7c-a0f6-163bd917756a
-  password: 66d37a65-7f6f-4e7c-a0f6-163bd917756a
-  alpn:
-  - h3
-  tls: true
-  sni: apple.com
-  skip-cert-verify: true
-  udp: true
-- name: HYSTERIA2_2001:bc8:32d7:14f::4_1231-1918
-  type: hysteria2
-  server: 2001:bc8:32d7:14f::4
-  port: 23880
-  password: dongtaiwang.com
-  tls: true
-  skip-cert-verify: true
-  sni: bing.com
-- name: VLESS_44_1231-1918
+- name: VLESS_44_1231-1930
   type: vless
   server: 157.254.223.44
   port: 18959
@@ -103,13 +19,30 @@ proxies:
   udp: true
   sni: itunes.apple.com
   skip-cert-verify: true
-- name: VLESS_232_1231-1918
-  type: vless
-  server: 89.144.35.232
-  port: 18952
-  uuid: 939db115-dea1-4806-a9fc-bd4e6c0213a4
-  network: tcp
+- name: HYSTERIA2_43_1231-1930
+  type: hysteria2
+  server: 157.254.223.43
+  port: 27921
+  password: dongtaiwang.com
   tls: true
-  udp: true
-  sni: itunes.apple.com
+  sni: apple.com
   skip-cert-verify: true
+- name: HYSTERIA2_146_1231-1930
+  type: hysteria2
+  server: 62.210.124.146
+  port: 22000
+  password: dongtaiwang.com
+  tls: true
+  sni: www.microsoft.com
+  skip-cert-verify: true
+proxy-groups:
+- name: 🚀 节点选择
+  type: select
+  proxies:
+  - VLESS_13_1231-1930
+  - VLESS_44_1231-1930
+  - HYSTERIA2_43_1231-1930
+  - HYSTERIA2_146_1231-1930
+  - DIRECT
+rules:
+- MATCH,🚀 节点选择
