@@ -20,43 +20,34 @@ def get_node_info(item):
     try:
         if not isinstance(item, dict): return None
         
+        # 1. 提取原始地址字符串
         raw_server = item.get('server') or item.get('add') or item.get('address')
-        if not raw_server: return None
+        if not raw_server or str(raw_server).startswith('127.'): return None
         
-        # --- 核心修复：IPv6 兼容的地址与端口分离逻辑 ---
         server_str = str(raw_server).strip()
         server = ""
-        port_part = ""
+        port = ""
 
-        if ']:' in server_str: # 标准 IPv6 格式 [2001:...]:port
+        # --- 增强型地址解析：处理 IPv6 和 端口跳跃 ---
+        if ']:' in server_str: # [2001:...]:27921
             server = server_str.split(']:')[0] + ']'
-            port_part = server_str.split(']:')[1]
-        elif server_str.startswith('[') and server_str.endswith(']'): # 纯 IPv6 地址
+            port = server_str.split(']:')[1]
+        elif server_str.startswith('[') and ']' in server_str: # [2001:...]
             server = server_str
-            port_part = item.get('port') or item.get('server_port')
-        elif server_str.count(':') == 1: # IPv4 格式 1.2.3.4:port
-            server = server_str.split(':')[0]
-            port_part = server_str.split(':')[1]
-        elif server_str.count(':') > 1 and ']:' not in server_str: # 可能是没带括号的 IPv6
-            # 尝试通过是否存在独立的端口字段来判断
-            possible_port = item.get('port') or item.get('server_port')
-            if possible_port:
-                server = server_str
-                port_part = str(possible_port)
-            else:
-                # 这种格式很难猜，跳过或记录
-                return None
-        else:
+            port = item.get('port') or item.get('server_port')
+        elif server_str.count(':') == 1: # 1.2.3.4:27921
+            server, port = server_str.split(':')
+        else: # 纯地址，端口在独立字段
             server = server_str
-            port_part = item.get('port') or item.get('server_port')
+            port = item.get('port') or item.get('server_port') or item.get('port_num')
 
-        # 进一步清洗端口（处理 27921,28000-29000）
-        if port_part:
-            port_part = str(port_part).split(',')[0].split('-')[0].strip()
+        # 清洗端口：只取第一位
+        if port:
+            port = str(port).split(',')[0].split('-')[0].split('/')[0].strip()
         
-        if not server or not port_part: return None
+        if not server or not port: return None
 
-        # --- 凭据提取 ---
+        # --- 凭据提取：只要有凭据就保留 ---
         secret = item.get('auth') or item.get('auth_str') or item.get('auth-str') or \
                  item.get('password') or item.get('uuid') or item.get('id')
         if not secret: return None
@@ -65,102 +56,90 @@ def get_node_info(item):
         p_type = str(item.get('type', '')).lower()
         if 'auth' in item or 'hy2' in p_type or 'hysteria2' in p_type:
             p_type = 'hysteria2'
-        elif 'uuid' in item or 'id' in item or 'vless' in p_type:
+        elif 'uuid' in item or 'vless' in p_type:
             p_type = 'vless'
         elif 'tuic' in p_type:
             p_type = 'tuic'
         else:
-            if 'auth' in item: p_type = 'hysteria2'
-            else: return None
+            # 兜底：如果是 Hysteria2 专用源里的，默认为 HY2
+            p_type = 'hysteria2'
 
         # --- SNI 提取 ---
-        tls_obj = item.get('tls', {})
-        if not isinstance(tls_obj, dict): tls_obj = {}
+        tls_obj = item.get('tls', {}) if isinstance(item.get('tls'), dict) else {}
         sni = item.get('servername') or item.get('sni') or \
               tls_obj.get('sni') or tls_obj.get('server_name') or ""
         
-        # 备注标识
-        addr_tag = server.split('.')[-1].replace(']', '') if '.' in server else "v6"
-        name = f"{p_type.upper()}_{addr_tag}_{beijing_time}"
+        # 备注
+        tag = server.split('.')[-1].replace(']', '') if '.' in server else "v6"
+        name = f"{p_type.upper()}_{tag}_{port}_{beijing_time}"
         
         return {
-            "name": name, "server": server, "port": int(port_part), 
-            "type": p_type, "sni": sni, "secret": secret, "raw_server_str": server_str, "raw": item
+            "name": name, "server": server, "port": int(port), 
+            "type": p_type, "sni": sni, "secret": secret, "raw_server": server_str
         }
     except:
         return None
 
 def main():
-    all_extracted_nodes = []
+    raw_nodes = []
     headers = {'User-Agent': 'Mozilla/5.0'}
 
     for url in URL_SOURCES:
         try:
             r = requests.get(url, headers=headers, timeout=15, verify=False)
             if r.status_code != 200: continue
+            data = json.loads(r.text) if url.endswith('.json') else yaml.safe_load(r.text)
             
-            try:
-                data = json.loads(r.text)
-            except:
-                data = yaml.safe_load(r.text)
-            
-            def find_nodes_recursive(obj):
+            # 使用列表来平铺所有发现的字典，避免递归提前结束
+            def extract_dicts(obj):
+                res = []
                 if isinstance(obj, dict):
-                    if any(k in obj for k in ['server', 'add', 'address']):
-                        node = get_node_info(obj)
-                        if node: all_extracted_nodes.append(node)
-                    for v in obj.values(): find_nodes_recursive(v)
+                    res.append(obj)
+                    for v in obj.values(): res.extend(extract_dicts(v))
                 elif isinstance(obj, list):
-                    for i in obj: find_nodes_recursive(i)
+                    for i in obj: res.extend(extract_dicts(i))
+                return res
             
-            find_nodes_recursive(data)
+            all_dicts = extract_dicts(data)
+            for d in all_dicts:
+                node = get_node_info(d)
+                if node: raw_nodes.append(node)
         except: continue
 
-    # --- 宽容去重 ---
+    # 去重：基于 (服务器+端口+密码)
     unique_nodes = []
-    seen_identifiers = set()
-    for n in all_extracted_nodes:
-        identifier = f"{n['type']}_{n['raw_server_str']}_{n['secret']}"
-        if identifier not in seen_identifiers:
+    seen = set()
+    for n in raw_nodes:
+        key = f"{n['raw_server']}_{n['port']}_{n['secret']}"
+        if key not in seen:
             unique_nodes.append(n)
-            seen_identifiers.add(identifier)
+            seen.add(key)
 
     uri_links = []
     clash_proxies = []
 
     for n in unique_nodes:
         name_enc = urllib.parse.quote(n["name"])
-        # IPv6 展示处理
-        srv_display = n['server'] 
-        if ':' in srv_display and not srv_display.startswith('['):
-            srv_display = f"[{srv_display}]"
-        
+        # URI 格式的 IPv6 必须带括号
+        srv_uri = n['server']
+        if ':' in srv_uri and not srv_uri.startswith('['): srv_uri = f"[{srv_uri}]"
+        # Clash 格式的 IPv6 不能带括号
+        srv_clash = n['server'].replace('[','').replace(']','')
+
         if n["type"] == "hysteria2":
-            sni_part = f"&sni={n['sni']}" if n['sni'] else ""
-            uri_links.append(f"hysteria2://{n['secret']}@{srv_display}:{n['port']}?insecure=1&allowInsecure=1{sni_part}#{name_enc}")
-            clash_proxies.append({
-                "name": n["name"], "type": "hysteria2", "server": n["server"].replace('[','').replace(']',''), 
-                "port": n["port"], "password": n["secret"], "tls": True, "sni": n["sni"], "skip-cert-verify": True
-            })
-            
+            sni_p = f"&sni={n['sni']}" if n['sni'] else ""
+            uri_links.append(f"hysteria2://{n['secret']}@{srv_uri}:{n['port']}?insecure=1&allowInsecure=1{sni_p}#{name_enc}")
+            clash_proxies.append({"name": n["name"], "type": "hysteria2", "server": srv_clash, "port": n["port"], "password": n["secret"], "tls": True, "sni": n["sni"], "skip-cert-verify": True})
         elif n["type"] == "vless":
-            raw = n["raw"]
-            tls_info = raw.get('tls', {}) if isinstance(raw.get('tls'), dict) else {}
-            ropts = raw.get('reality-opts') or tls_info.get('reality', {})
-            pbk = ropts.get('public-key') or ropts.get('public_key', '')
-            sid = ropts.get('short-id') or ropts.get('short_id', '')
-            sni_part = f"&sni={n['sni']}" if n['sni'] else ""
-            uri_links.append(f"vless://{n['secret']}@{srv_display}:{n['port']}?encryption=none&security=reality&pbk={pbk}&sid={sid}&type=tcp{sni_part}#{name_enc}")
-            clash_proxies.append({
-                "name": n["name"], "type": "vless", "server": n["server"].replace('[','').replace(']',''), 
-                "port": n["port"], "uuid": n["secret"], "network": "tcp", "tls": True, "udp": True, "sni": n["sni"], "skip-cert-verify": True
-            })
+            # 简化的 VLESS，重点在于把节点抓出来
+            uri_links.append(f"vless://{n['secret']}@{srv_uri}:{n['port']}?encryption=none&security=reality&type=tcp#{name_enc}")
+            clash_proxies.append({"name": n["name"], "type": "vless", "server": srv_clash, "port": n["port"], "uuid": n["secret"], "tls": True, "skip-cert-verify": True})
 
     with open("node.txt", "w", encoding="utf-8") as f: f.write("\n".join(uri_links))
     with open("sub.txt", "w", encoding="utf-8") as f: f.write(base64.b64encode("\n".join(uri_links).encode()).decode())
     with open("clash.yaml", "w", encoding="utf-8") as f: yaml.dump({"proxies": clash_proxies}, f, allow_unicode=True, sort_keys=False)
 
-    print(f"✅ 完成! 节点总数: {len(unique_nodes)} (已包含 IPv4 和 IPv6)")
+    print(f"✅ 完成! 本次成功提取节点总数: {len(unique_nodes)}")
 
 if __name__ == "__main__":
     main()
