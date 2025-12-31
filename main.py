@@ -3,7 +3,7 @@ import requests
 import base64
 import yaml
 
-# 数据源列表 - 保持您现有的源不变
+# 数据源列表
 URL_SOURCES = [
     "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/hysteria2/1/config.json",
     "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/hysteria2/2/config.json",
@@ -63,14 +63,14 @@ def parse_to_link(item):
     node_name = f"{p_type.upper()}_{addr_tag}_{port}"
     server_display = f"[{server}]" if ":" in str(server) and "[" not in str(server) and "," not in str(server) else server
 
-    # --- 各协议链接生成逻辑 (适配 v2rayN V7.x) ---
+    # --- 各协议链接生成逻辑 ---
 
-    # 1. Hysteria 2
+    # 1. Hysteria 2 (既然你反馈正常，保持现有格式)
     if p_type in ['hysteria2', 'hy2']:
         auth = item.get('auth') or item.get('password') or item.get('auth-str')
         return f"hysteria2://{auth}@{server_display}:{port}?sni={sni}&insecure=1#{node_name}"
 
-    # 2. VLESS Reality
+    # 2. VLESS Reality (正常，保持原样)
     elif p_type == 'vless':
         uuid = item.get('uuid') or item.get('id')
         link = f"vless://{uuid}@{server_display}:{port}?encryption=none&security=reality&sni={sni}"
@@ -82,10 +82,11 @@ def parse_to_link(item):
         if sid: link += f"&sid={sid}"
         return f"{link}#{node_name}"
 
-    # 3. TUIC (精简 V7 适配版)
+    # 3. TUIC (重点修复：匹配 v2rayN 参数名)
     elif p_type == 'tuic':
         uuid = item.get('uuid') or item.get('id') or item.get('password')
-        return f"tuic://{uuid}@{server_display}:{port}?sni={sni}&alpn=h3&insecure=1#{node_name}"
+        # 改用 allowInsecure 并固定 version=5 提升解析率
+        return f"tuic://{uuid}@{server_display}:{port}?version=5&sni={sni}&alpn=h3&allowInsecure=1#{node_name}"
     
     # 4. Hysteria 1
     elif p_type == 'hysteria':
@@ -101,14 +102,12 @@ def main():
             r = requests.get(url, timeout=10)
             if r.status_code != 200: continue
             
-            # YAML 源处理
             if 'clash' in url or 'proxies:' in r.text:
                 data = yaml.safe_load(r.text)
                 if isinstance(data, dict) and 'proxies' in data:
                     for p in data['proxies']:
                         link = parse_to_link(p)
                         if link: unique_links.add(link)
-            # JSON 源处理
             else:
                 data = json.loads(r.text)
                 if isinstance(data, dict):
@@ -122,23 +121,21 @@ def main():
         except: continue
 
     if unique_links:
-        # 排序确保输出整洁
         final_list = sorted(list(unique_links))
         full_content = "\n".join(final_list)
         
-        # 保存明文 nodes.txt
+        # 保存明文
         with open("nodes.txt", "w", encoding="utf-8") as f:
             f.write(full_content)
             
-        # 保存 Base64 sub.txt
-        # 注意：使用 standard b64 编码，确保没有冗余换行
-        b64_bytes = base64.b64encode(full_content.encode("utf-8"))
+        # 保存 Base64 (strip 确保无多余换行)
+        b64_bytes = base64.b64encode(full_content.strip().encode("utf-8"))
         with open("sub.txt", "w", encoding="utf-8") as f:
             f.write(b64_bytes.decode("utf-8"))
             
-        print(f"✅ 运行成功！共捕获 {len(final_list)} 个节点。")
+        print(f"✅ 处理完成，共捕获 {len(final_list)} 个节点。")
     else:
-        print("❌ 未能抓取到任何有效节点。")
+        print("❌ 未捕获到节点。")
 
 if __name__ == "__main__":
     main()
