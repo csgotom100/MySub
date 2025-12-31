@@ -1,91 +1,89 @@
 proxies:
-- name: VLESS_13_1231-1849
+- name: VLESS_13_1231-1853
+  type: vless
   server: 195.154.200.13
   port: 17401
-  udp: true
-  tls: true
-  sni: itunes.apple.com
-  skip-cert-verify: true
-  type: vless
   uuid: add14a5b-f648-4423-8a1f-8b8f54c0daef
   network: tcp
-- name: VLESS_node_1231-1849
+  tls: true
+  udp: true
+  sni: itunes.apple.com
+  skip-cert-verify: true
+- name: VLESS_node_1231-1853
+  type: vless
   server: 2001:bc8:32d7:181::2
   port: 17401
-  udp: true
-  tls: true
-  sni: itunes.apple.com
-  skip-cert-verify: true
-  type: vless
   uuid: add14a5b-f648-4423-8a1f-8b8f54c0daef
   network: tcp
-- name: VLESS_node_1231-1849
+  tls: true
+  udp: true
+  sni: itunes.apple.com
+  skip-cert-verify: true
+- name: VLESS_node_1231-1853
+  type: vless
   server: 2001:bc8:32d7:181::3
   port: 17401
-  udp: true
-  tls: true
-  sni: itunes.apple.com
-  skip-cert-verify: true
-  type: vless
   uuid: add14a5b-f648-4423-8a1f-8b8f54c0daef
   network: tcp
-- name: TUIC_231_1231-1849
+  tls: true
+  udp: true
+  sni: itunes.apple.com
+  skip-cert-verify: true
+- name: TUIC_231_1231-1853
+  type: tuic
   server: 89.144.35.231
   port: 33457
-  udp: true
-  tls: true
-  sni: apple.com
-  skip-cert-verify: true
-  type: tuic
   uuid: 66d37a65-7f6f-4e7c-a0f6-163bd917756a
   password: 66d37a65-7f6f-4e7c-a0f6-163bd917756a
   alpn:
   - h3
-  congestion-controller: cubic
-- name: TUIC_node_1231-1849
+  tls: true
+  sni: apple.com
+  skip-cert-verify: true
+  udp: true
+- name: TUIC_node_1231-1853
+  type: tuic
   server: 2a14:7583:299d::a
   port: 33457
-  udp: true
-  tls: true
-  sni: apple.com
-  skip-cert-verify: true
-  type: tuic
   uuid: 66d37a65-7f6f-4e7c-a0f6-163bd917756a
   password: 66d37a65-7f6f-4e7c-a0f6-163bd917756a
   alpn:
   - h3
-  congestion-controller: cubic
-- name: VLESS_44_1231-1849
+  tls: true
+  sni: apple.com
+  skip-cert-verify: true
+  udp: true
+- name: VLESS_44_1231-1853
+  type: vless
   server: 157.254.223.44
   port: 18959
-  udp: true
-  tls: true
-  sni: itunes.apple.com
-  skip-cert-verify: true
-  type: vless
   uuid: d0b3e27d-bbfc-4a3b-8e60-6973de8fcefa
   network: tcp
-- name: VLESS_232_1231-1849
-  server: 89.144.35.232
-  port: 18952
-  udp: true
   tls: true
+  udp: true
   sni: itunes.apple.com
   skip-cert-verify: true
+- name: VLESS_232_1231-1853
   type: vless
+  server: 89.144.35.232
+  port: 18952
   uuid: 939db115-dea1-4806-a9fc-bd4e6c0213a4
   network: tcp
+  tls: true
+  udp: true
+  sni: itunes.apple.com
+  skip-cert-verify: true
 proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
-  - VLESS_13_1231-1849
-  - VLESS_node_1231-1849
-  - VLESS_node_1231-1849
-  - TUIC_231_1231-1849
-  - TUIC_node_1231-1849
-  - VLESS_44_1231-1849
-  - VLESS_232_1231-1849
+  - VLESS_13_1231-1853
+  - VLESS_node_1231-1853
+  - VLESS_node_1231-1853
+  - TUIC_231_1231-1853
+  - TUIC_node_1231-1853
+  - VLESS_44_1231-1853
+  - VLESS_232_1231-1853
   - DIRECT
 rules:
 - MATCH,🚀 节点选择
