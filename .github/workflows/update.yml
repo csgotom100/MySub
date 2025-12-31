@@ -1,0 +1,32 @@
+name: Auto Update Sub
+
+on:
+  schedule:
+    - cron: '0 */4 * * *' # 每 4 小时自动更新一次
+  workflow_dispatch:      # 允许手动触发更新
+
+jobs:
+  run-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Process Nodes
+        run: python main.py
+
+      - name: Update Repository
+        run: |
+          git config --global user.email "bot@github.com"
+          git config --global user.name "Sub-Bot"
+          git add sub.txt
+          git commit -m "Update nodes" || exit 0
+          git push
