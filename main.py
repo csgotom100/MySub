@@ -34,7 +34,6 @@ def parse_to_link(item):
     raw_server = item.get('server') or item.get('add')
     raw_port = item.get('port') or item.get('server_port') or item.get('port_num')
     
-    # 解析复合型 Server (IP:Port)
     if raw_server and ':' in str(raw_server) and not raw_port:
         if '[' in str(raw_server):
             parts = str(raw_server).split(']:')
@@ -57,20 +56,10 @@ def parse_to_link(item):
     if isinstance(tls_data, bool): tls_data = {}
     sni = item.get('servername') or item.get('sni') or tls_data.get('server_name') or tls_data.get('sni') or "www.bing.com"
 
-    # 构造更智能的备注名 (Name)
     tag = p_type.upper()
     addr_brief = str(server).split('.')[-1] if '.' in str(server) else "v6"
     node_name = f"{tag}_{addr_brief}_{port}"
 
-    # 1. Hysteria 2
     if p_type in ['hysteria2', 'hy2']:
         auth = item.get('auth') or item.get('password') or item.get('auth-str')
-        return f"hysteria2://{auth}@{server_display}:{port}/?sni={sni}&insecure=1#{node_name}"
-
-    # 2. VLESS Reality
-    elif p_type == 'vless':
-        uuid = item.get('uuid') or item.get('id')
-        link = f"vless://{uuid}@{server_display}:{port}?encryption=none&security=reality&sni={sni}"
-        ropts = item.get('reality-opts', {})
-        rbox = tls_data.get('reality', {})
-        pbk = ropts.
+        return f"hysteria2
