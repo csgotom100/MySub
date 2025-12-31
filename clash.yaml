@@ -1,5 +1,14 @@
 proxies:
-- name: VLESS_13_1231-1853
+- name: HYSTERIA2_33_1231-1856
+  type: hysteria2
+  server: 5.178.101.33
+  port: 23008
+  password: dongtaiwang.com
+  tls: true
+  sni: apple.com
+  skip-cert-verify: true
+  udp: true
+- name: VLESS_13_1231-1856
   type: vless
   server: 195.154.200.13
   port: 17401
@@ -9,7 +18,34 @@ proxies:
   udp: true
   sni: itunes.apple.com
   skip-cert-verify: true
-- name: VLESS_node_1231-1853
+- name: HYSTERIA2_xyz_1231-1856
+  type: hysteria2
+  server: ipv4.758733.xyz
+  port: 20001
+  password: dongtaiwang.com
+  tls: true
+  sni: apple.com
+  skip-cert-verify: true
+  udp: true
+- name: HYSTERIA2_v6_1231-1856
+  type: hysteria2
+  server: 2001:bc8:32d7:402::3
+  port: 20001
+  password: dongtaiwang.com
+  tls: true
+  sni: apple.com
+  skip-cert-verify: true
+  udp: true
+- name: HYSTERIA2_v6_1231-1856
+  type: hysteria2
+  server: 2001:bc8:32d7:402::4
+  port: 20001
+  password: dongtaiwang.com
+  tls: true
+  sni: apple.com
+  skip-cert-verify: true
+  udp: true
+- name: VLESS_v6_1231-1856
   type: vless
   server: 2001:bc8:32d7:181::2
   port: 17401
@@ -19,7 +55,7 @@ proxies:
   udp: true
   sni: itunes.apple.com
   skip-cert-verify: true
-- name: VLESS_node_1231-1853
+- name: VLESS_v6_1231-1856
   type: vless
   server: 2001:bc8:32d7:181::3
   port: 17401
@@ -29,7 +65,7 @@ proxies:
   udp: true
   sni: itunes.apple.com
   skip-cert-verify: true
-- name: TUIC_231_1231-1853
+- name: TUIC_231_1231-1856
   type: tuic
   server: 89.144.35.231
   port: 33457
@@ -41,7 +77,7 @@ proxies:
   sni: apple.com
   skip-cert-verify: true
   udp: true
-- name: TUIC_node_1231-1853
+- name: TUIC_v6_1231-1856
   type: tuic
   server: 2a14:7583:299d::a
   port: 33457
@@ -53,7 +89,16 @@ proxies:
   sni: apple.com
   skip-cert-verify: true
   udp: true
-- name: VLESS_44_1231-1853
+- name: HYSTERIA2_v6_1231-1856
+  type: hysteria2
+  server: 2001:bc8:32d7:14f::4
+  port: 23880
+  password: dongtaiwang.com
+  tls: true
+  sni: bing.com
+  skip-cert-verify: true
+  udp: true
+- name: VLESS_44_1231-1856
   type: vless
   server: 157.254.223.44
   port: 18959
@@ -63,7 +108,7 @@ proxies:
   udp: true
   sni: itunes.apple.com
   skip-cert-verify: true
-- name: VLESS_232_1231-1853
+- name: VLESS_232_1231-1856
   type: vless
   server: 89.144.35.232
   port: 18952
@@ -77,13 +122,18 @@ proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
-  - VLESS_13_1231-1853
-  - VLESS_node_1231-1853
-  - VLESS_node_1231-1853
-  - TUIC_231_1231-1853
-  - TUIC_node_1231-1853
-  - VLESS_44_1231-1853
-  - VLESS_232_1231-1853
+  - HYSTERIA2_33_1231-1856
+  - VLESS_13_1231-1856
+  - HYSTERIA2_xyz_1231-1856
+  - HYSTERIA2_v6_1231-1856
+  - HYSTERIA2_v6_1231-1856
+  - VLESS_v6_1231-1856
+  - VLESS_v6_1231-1856
+  - TUIC_231_1231-1856
+  - TUIC_v6_1231-1856
+  - HYSTERIA2_v6_1231-1856
+  - VLESS_44_1231-1856
+  - VLESS_232_1231-1856
   - DIRECT
 rules:
 - MATCH,🚀 节点选择
