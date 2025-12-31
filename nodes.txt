@@ -6,8 +6,8 @@ hysteria://[2001:bc8:32d7:14f::4]:23880?auth=dongtaiwang.com&sni=bing.com&insecu
 hysteria://[2001:bc8:32d7:402::3]:20001?auth=dongtaiwang.com&sni=apple.com&insecure=1&allowInsecure=1#HYSTERIA_2001%3Abc8%3A32d7%3A402%3A%3A3_20001
 hysteria://[2001:bc8:32d7:402::4]:20001?auth=dongtaiwang.com&sni=apple.com&insecure=1&allowInsecure=1#HYSTERIA_2001%3Abc8%3A32d7%3A402%3A%3A4_20001
 hysteria://ipv4.758733.xyz:20001?auth=dongtaiwang.com&sni=apple.com&insecure=1&allowInsecure=1#HYSTERIA_ipv4.758733.xyz_20001
-tuic://66d37a65-7f6f-4e7c-a0f6-163bd917756a@89.144.35.231:33457?sni=apple.com&alpn=h3&allowInsecure=1#TUIC_89.144.35.231_33457
-tuic://66d37a65-7f6f-4e7c-a0f6-163bd917756a@[2a14:7583:299d::a]:33457?sni=apple.com&alpn=h3&allowInsecure=1#TUIC_2a14%3A7583%3A299d%3A%3Aa_33457
+tuic://66d37a65-7f6f-4e7c-a0f6-163bd917756a%3A66d37a65-7f6f-4e7c-a0f6-163bd917756a@89.144.35.231:33457?sni=apple.com&alpn=h3&insecure=1&allowInsecure=1&congestion_control=bbr#TUIC_89.144.35.231_33457
+tuic://66d37a65-7f6f-4e7c-a0f6-163bd917756a%3A66d37a65-7f6f-4e7c-a0f6-163bd917756a@[2a14:7583:299d::a]:33457?sni=apple.com&alpn=h3&insecure=1&allowInsecure=1&congestion_control=bbr#TUIC_2a14%3A7583%3A299d%3A%3Aa_33457
 vless://939db115-dea1-4806-a9fc-bd4e6c0213a4@89.144.35.232:18952?encryption=none&security=reality&sni=itunes.apple.com&pbk=cbE6Dwv3-JG7qTLa1QC0nDo33cS0jyeMOkp5pHL65wg&sid=650002d03178115e&type=tcp&headerType=none#VLESS_89.144.35.232_18952
 vless://add14a5b-f648-4423-8a1f-8b8f54c0daef@195.154.200.13:17401?encryption=none&security=reality&sni=itunes.apple.com&pbk=IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU&sid=8ef4455ba637425b&type=tcp&headerType=none#VLESS_195.154.200.13_17401
 vless://add14a5b-f648-4423-8a1f-8b8f54c0daef@[2001:bc8:32d7:181::2]:17401?encryption=none&security=reality&sni=itunes.apple.com&pbk=IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU&sid=8ef4455ba637425b&type=tcp&headerType=none#VLESS_2001%3Abc8%3A32d7%3A181%3A%3A2_17401
