@@ -1,5 +1,5 @@
 proxies:
-- name: VLESS_13_02_2016
+- name: VLESS_13_02_2017
   type: vless
   server: 195.154.200.13
   port: 17401
@@ -12,7 +12,7 @@ proxies:
     public-key: IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU
     short-id: 8ef4455ba637425b
   client-fingerprint: chrome
-- name: VLESS_v6_07_2016
+- name: VLESS_v6_07_2017
   type: vless
   server: 2001:bc8:32d7:181::2
   port: 17401
@@ -25,7 +25,7 @@ proxies:
     public-key: IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU
     short-id: 8ef4455ba637425b
   client-fingerprint: chrome
-- name: VLESS_v6_08_2016
+- name: VLESS_v6_08_2017
   type: vless
   server: 2001:bc8:32d7:181::3
   port: 17401
@@ -38,7 +38,7 @@ proxies:
     public-key: IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU
     short-id: 8ef4455ba637425b
   client-fingerprint: chrome
-- name: VLESS_44_09_2016
+- name: VLESS_44_09_2017
   type: vless
   server: 157.254.223.44
   port: 18959
@@ -51,7 +51,7 @@ proxies:
     public-key: -hwVEdgFkvjku8ESuDoAA7id5yGGv_zXBvBW_RdhmHA
     short-id: d557c6895d014075
   client-fingerprint: chrome
-- name: VLESS_232_10_2016
+- name: VLESS_232_10_2017
   type: vless
   server: 89.144.35.232
   port: 18952
@@ -64,7 +64,7 @@ proxies:
     public-key: cbE6Dwv3-JG7qTLa1QC0nDo33cS0jyeMOkp5pHL65wg
     short-id: 650002d03178115e
   client-fingerprint: chrome
-- name: HYSTERIA2_43_11_2016
+- name: HYSTERIA2_43_11_2017
   type: hysteria2
   server: 157.254.223.43
   port: 27921
@@ -72,7 +72,7 @@ proxies:
   tls: true
   sni: apple.com
   skip-cert-verify: true
-- name: HYSTERIA2_146_12_2016
+- name: HYSTERIA2_146_12_2017
   type: hysteria2
   server: 62.210.124.146
   port: 22000
@@ -84,13 +84,13 @@ proxy-groups:
 - name: 🚀 自动选择
   type: url-test
   proxies:
-  - VLESS_13_02_2016
-  - VLESS_v6_07_2016
-  - VLESS_v6_08_2016
-  - VLESS_44_09_2016
-  - VLESS_232_10_2016
-  - HYSTERIA2_43_11_2016
-  - HYSTERIA2_146_12_2016
+  - VLESS_13_02_2017
+  - VLESS_v6_07_2017
+  - VLESS_v6_08_2017
+  - VLESS_44_09_2017
+  - VLESS_232_10_2017
+  - HYSTERIA2_43_11_2017
+  - HYSTERIA2_146_12_2017
   url: http://www.gstatic.com/generate_204
   interval: 300
 rules:
