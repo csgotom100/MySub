@@ -71,10 +71,9 @@ def main():
             def extract_dicts(obj):
                 res = []
                 if isinstance(obj, dict):
-                    res.append(obj)
-                    for v in obj.values(): res.extend(extract_dicts(v))
+                    res.append(obj); [res.extend(extract_dicts(v)) for v in obj.values()]
                 elif isinstance(obj, list):
-                    for i in obj: res.extend(extract_dicts(i))
+                    [res.extend(extract_dicts(i)) for i in obj]
                 return res
             
             for d in extract_dicts(data):
@@ -87,11 +86,10 @@ def main():
     for n in raw_nodes_data:
         config_key = (n['type'], n['raw_server'], n['port'], n['secret'], n['sni'], n['pbk'])
         if config_key not in seen_configs:
-            unique_configs.append(n)
-            seen_configs.add(config_key)
+            unique_configs.append(n); seen_configs.add(config_key)
 
-    uri_links = []
     clash_proxies = []
+    uri_links = []
     beijing_time = (datetime.utcnow() + timedelta(hours=8)).strftime("%H%M")
     
     for index, n in enumerate(unique_configs, start=1):
@@ -103,39 +101,56 @@ def main():
         srv_clash = n['server'].replace('[','').replace(']','')
         
         if n["type"] == "hysteria2":
-            sni_p = f"&sni={n['sni']}" if n['sni'] else ""
-            uri_links.append(f"hysteria2://{n['secret']}@{srv_uri}:{n['port']}?insecure=1&allowInsecure=1{sni_p}#{name_enc}")
+            uri_links.append(f"hysteria2://{n['secret']}@{srv_uri}:{n['port']}?insecure=1&allowInsecure=1#{name_enc}")
             clash_proxies.append({"name": node_name, "type": "hysteria2", "server": srv_clash, "port": n["port"], "password": n["secret"], "tls": True, "sni": n["sni"], "skip-cert-verify": True})
-        
         elif n["type"] == "vless" and n['pbk']:
-            sni_p = f"&sni={n['sni']}" if n['sni'] else ""
-            uri_links.append(f"vless://{n['secret']}@{srv_uri}:{n['port']}?encryption=none&security=reality&type=tcp&pbk={n['pbk']}&sid={n['sid']}{sni_p}#{name_enc}")
-            clash_proxies.append({
-                "name": node_name, "type": "vless", "server": srv_clash, "port": n["port"], "uuid": n["secret"],
-                "tls": True, "udp": True, "servername": n["sni"], "network": "tcp",
-                "reality-opts": {"public-key": n["pbk"], "short-id": n["sid"]}, "client-fingerprint": "chrome"
-            })
+            uri_links.append(f"vless://{n['secret']}@{srv_uri}:{n['port']}?encryption=none&security=reality&type=tcp&pbk={n['pbk']}&sid={n['sid']}#{name_enc}")
+            clash_proxies.append({"name": node_name, "type": "vless", "server": srv_clash, "port": n["port"], "uuid": n["secret"], "tls": True, "udp": True, "servername": n["sni"], "network": "tcp", "reality-opts": {"public-key": n["pbk"], "short-id": n["sid"]}, "client-fingerprint": "chrome"})
 
-    # --- 修复后的写入逻辑 ---
-    with open("node.txt", "w", encoding="utf-8") as f:
-        f.write("\n".join(uri_links))
-    
-    with open("sub.txt", "w", encoding="utf-8") as f:
-        f.write(base64.b64encode("\n".join(uri_links).encode()).decode())
+    # --- 核心：Clash 分流规则配置 ---
+    p_names = [p["name"] for p in clash_proxies]
     
     clash_config = {
+        "port": 7890, "socks-port": 7891, "allow-lan": True, "mode": "rule", "log-level": "info",
+        "dns": {"enable": True, "ipv6": False, "enhanced-mode": "fake-ip", "nameserver": ["223.5.5.5", "119.29.29.29"], "fallback": ["8.8.8.8", "1.1.1.1"]},
         "proxies": clash_proxies,
         "proxy-groups": [
-            {"name": "🚀 自动选择", "type": "url-test", "proxies": [p["name"] for p in clash_proxies], "url": "http://www.gstatic.com/generate_204", "interval": 300},
-            {"name": "🔰 节点选择", "type": "select", "proxies": ["🚀 自动选择"] + [p["name"] for p in clash_proxies]}
+            {"name": "🚀 节点选择", "type": "select", "proxies": ["⚡ 自动选择"] + p_names + ["DIRECT"]},
+            {"name": "⚡ 自动选择", "type": "url-test", "proxies": p_names, "url": "http://www.gstatic.com/generate_204", "interval": 300},
+            {"name": "🌍 全球直连", "type": "select", "proxies": ["DIRECT", "🚀 节点选择"]},
+            {"name": "🛑 广告拦截", "type": "select", "proxies": ["REJECT", "DIRECT", "🚀 节点选择"]},
+            {"name": "🍎 苹果服务", "type": "select", "proxies": ["DIRECT", "🚀 节点选择", "⚡ 自动选择"]},
+            {"name": "Ⓜ️ 微软服务", "type": "select", "proxies": ["DIRECT", "🚀 节点选择", "⚡ 自动选择"]},
+            {"name": "🐟 漏网之鱼", "type": "select", "proxies": ["🚀 节点选择", "DIRECT", "⚡ 自动选择"]}
         ],
-        "rules": ["MATCH,🔰 节点选择"]
+        "rule-providers": {
+            "reject": {"type": "http", "behavior": "domain", "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt", "path": "./ruleset/reject.yaml", "interval": 86400},
+            "proxy": {"type": "http", "behavior": "domain", "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt", "path": "./ruleset/proxy.yaml", "interval": 86400},
+            "direct": {"type": "http", "behavior": "domain", "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt", "path": "./ruleset/direct.yaml", "interval": 86400},
+            "private": {"type": "http", "behavior": "domain", "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt", "path": "./ruleset/private.yaml", "interval": 86400},
+            "apple": {"type": "http", "behavior": "domain", "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.txt", "path": "./ruleset/apple.yaml", "interval": 86400},
+            "microsoft": {"type": "http", "behavior": "domain", "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/microsoft.yaml", "path": "./ruleset/microsoft.yaml", "interval": 86400},
+            "gfw": {"type": "http", "behavior": "domain", "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt", "path": "./ruleset/gfw.yaml", "interval": 86400}
+        },
+        "rules": [
+            "RULE-SET,private,DIRECT",
+            "RULE-SET,reject,🛑 广告拦截",
+            "RULE-SET,apple,🍎 苹果服务",
+            "RULE-SET,microsoft,Ⓜ️ 微软服务",
+            "RULE-SET,proxy,🚀 节点选择",
+            "RULE-SET,gfw,🚀 节点选择",
+            "GEOIP,LAN,DIRECT",
+            "GEOIP,CN,🌍 全球直连",
+            "MATCH,🐟 漏网之鱼"
+        ]
     }
+
+    # 写入文件
+    with open("node.txt", "w", encoding="utf-8") as f: f.write("\n".join(uri_links))
+    with open("sub.txt", "w", encoding="utf-8") as f: f.write(base64.b64encode("\n".join(uri_links).encode()).decode())
+    with open("clash.yaml", "w", encoding="utf-8") as f: yaml.dump(clash_config, f, allow_unicode=True, sort_keys=False)
     
-    with open("clash.yaml", "w", encoding="utf-8") as f:
-        yaml.dump(clash_config, f, allow_unicode=True, sort_keys=False)
-    
-    print(f"✅ 完成！有效节点: {len(clash_proxies)}")
+    print(f"✅ 成功! 节点数: {len(clash_proxies)}，规则集已加载")
 
 if __name__ == "__main__":
     main()
