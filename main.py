@@ -71,9 +71,10 @@ def main():
             def extract_dicts(obj):
                 res = []
                 if isinstance(obj, dict):
-                    res.append(obj); [res.extend(extract_dicts(v)) for v in obj.values()]
+                    res.append(obj)
+                    for v in obj.values(): res.extend(extract_dicts(v))
                 elif isinstance(obj, list):
-                    [res.extend(extract_dicts(i)) for i in obj]
+                    for i in obj: res.extend(extract_dicts(i))
                 return res
             
             for d in extract_dicts(data):
@@ -81,23 +82,19 @@ def main():
                 if node: raw_nodes_data.append(node)
         except: continue
 
-    # 1. 配置去重（确保不抓取完全重复的节点）
     unique_configs = []
     seen_configs = set()
     for n in raw_nodes_data:
-        # 唯一标识：类型+服务器+端口+密码+SNI+PBK
         config_key = (n['type'], n['raw_server'], n['port'], n['secret'], n['sni'], n['pbk'])
         if config_key not in seen_configs:
             unique_configs.append(n)
             seen_configs.add(config_key)
 
-    # 2. 生成绝对唯一的备注名（引入自增序号）
     uri_links = []
     clash_proxies = []
     beijing_time = (datetime.utcnow() + timedelta(hours=8)).strftime("%H%M")
     
     for index, n in enumerate(unique_configs, start=1):
-        # 命名格式：序号_协议_IP末段_时间 (序号 index 保证了绝对唯一)
         tag = n['server'].split('.')[-1].replace(']', '') if '.' in n['server'] else "v6"
         node_name = f"{index:02d}_{n['type'].upper()}_{tag}_{beijing_time}"
         
@@ -108,10 +105,7 @@ def main():
         if n["type"] == "hysteria2":
             sni_p = f"&sni={n['sni']}" if n['sni'] else ""
             uri_links.append(f"hysteria2://{n['secret']}@{srv_uri}:{n['port']}?insecure=1&allowInsecure=1{sni_p}#{name_enc}")
-            clash_proxies.append({
-                "name": node_name, "type": "hysteria2", "server": srv_clash, "port": n["port"],
-                "password": n["secret"], "tls": True, "sni": n["sni"], "skip-cert-verify": True
-            })
+            clash_proxies.append({"name": node_name, "type": "hysteria2", "server": srv_clash, "port": n["port"], "password": n["secret"], "tls": True, "sni": n["sni"], "skip-cert-verify": True})
         
         elif n["type"] == "vless" and n['pbk']:
             sni_p = f"&sni={n['sni']}" if n['sni'] else ""
@@ -122,6 +116,26 @@ def main():
                 "reality-opts": {"public-key": n["pbk"], "short-id": n["sid"]}, "client-fingerprint": "chrome"
             })
 
-    # 保存 node.txt 和 base64 sub.txt
-    with open("node.txt", "w", encoding="utf-8") as f: f.write("\n".join(uri_links))
-    with open("sub.txt", "w", encoding="utf-8
+    # --- 修复后的写入逻辑 ---
+    with open("node.txt", "w", encoding="utf-8") as f:
+        f.write("\n".join(uri_links))
+    
+    with open("sub.txt", "w", encoding="utf-8") as f:
+        f.write(base64.b64encode("\n".join(uri_links).encode()).decode())
+    
+    clash_config = {
+        "proxies": clash_proxies,
+        "proxy-groups": [
+            {"name": "🚀 自动选择", "type": "url-test", "proxies": [p["name"] for p in clash_proxies], "url": "http://www.gstatic.com/generate_204", "interval": 300},
+            {"name": "🔰 节点选择", "type": "select", "proxies": ["🚀 自动选择"] + [p["name"] for p in clash_proxies]}
+        ],
+        "rules": ["MATCH,🔰 节点选择"]
+    }
+    
+    with open("clash.yaml", "w", encoding="utf-8") as f:
+        yaml.dump(clash_config, f, allow_unicode=True, sort_keys=False)
+    
+    print(f"✅ 完成！有效节点: {len(clash_proxies)}")
+
+if __name__ == "__main__":
+    main()
