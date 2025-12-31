@@ -32,7 +32,6 @@ def get_node_info(item):
     if isinstance(tls_data, bool): tls_data = {}
     sni = item.get('servername') or item.get('sni') or tls_data.get('server_name') or tls_data.get('sni') or "www.microsoft.com"
     
-    # 备注格式：协议_地址末段_时间
     addr_short = str(server).split('.')[-1] if '.' in str(server) else "v6"
     name = f"{p_type.upper()}_{addr_short}_{beijing_time}"
     
@@ -55,50 +54,41 @@ def create_clash_proxy(info):
         "skip-cert-verify": True
     }
     
-    try:
-        if info["type"] in ['hysteria2', 'hy2']:
-            p["type"] = "hysteria2"
-            p["password"] = info["auth"]
-        elif info["type"] == 'vless':
-            p["type"] = "vless"
-            p["uuid"] = info["uuid"]
-            p["network"] = "tcp"
-            ropts = info["item"].get('reality-opts', {})
-            rbox = info["tls_data"].get('reality', {})
-            p["reality-opts"] = {
-                "public-key": ropts.get('public-key') or rbox.get('public_key'),
-                "short-id": ropts.get('short-id') or rbox.get('short_id')
-            }
-            p["client-fingerprint"] = "chrome"
-        elif info["type"] == 'tuic':
-            p["type"] = "tuic"
-            p["uuid"] = info["uuid"]
-            p["password"] = info["uuid"]
-            p["alpn"] = ["h3"]
-            p["congestion-controller"] = "bbr"
-        elif info["type"] == 'hysteria':
-            p["type"] = "hysteria"
-            p["auth_str"] = info["auth"]
-            p["up"] = "100"
-            p["down"] = "100"
-        else:
-            return None
-        return p
-    except:
+    if info["type"] in ['hysteria2', 'hy2']:
+        p["type"] = "hysteria2"
+        p["password"] = info["auth"]
+    elif info["type"] == 'vless':
+        p["type"] = "vless"
+        p["uuid"] = info["uuid"]
+        p["network"] = "tcp"
+        ropts = info["item"].get('reality-opts', {})
+        rbox = info["tls_data"].get('reality', {})
+        p["reality-opts"] = {
+            "public-key": ropts.get('public-key') or rbox.get('public_key'),
+            "short-id": ropts.get('short-id') or rbox.get('short_id')
+        }
+    elif info["type"] == 'tuic':
+        p["type"] = "tuic"
+        p["uuid"] = info["uuid"]
+        p["password"] = info["uuid"]
+        p["alpn"] = ["h3"]
+        p["congestion-controller"] = "cubic" # 对应截图中的配置
+    elif info["type"] == 'hysteria':
+        p["type"] = "hysteria"
+        p["auth_str"] = info["auth"]
+        p["up"] = 100
+        p["down"] = 100
+    else:
         return None
+    return p
 
 def main():
     nodes_data = []
-    # 1. 抓取并解析数据
     for url in URL_SOURCES:
         try:
             r = requests.get(url, timeout=15)
             if r.status_code != 200: continue
-            
-            if 'clash' in url or 'yaml' in url:
-                content = yaml.safe_load(r.text)
-            else:
-                content = json.loads(r.text)
+            content = yaml.safe_load(r.text) if ('clash' in url or 'yaml' in url) else json.loads(r.text)
             
             proxies_list = []
             if isinstance(content, dict):
@@ -111,18 +101,16 @@ def main():
                 if info: nodes_data.append(info)
         except: continue
 
-    if not nodes_data:
-        print("❌ 未捕获到节点")
-        return
+    if not nodes_data: return
 
-    # 2. 生成通用链接 (node.txt & sub.txt)
+    # 生成通用 URI (node.txt & sub.txt)
     links = []
     for info in nodes_data:
         name_enc = urllib.parse.quote(info["name"])
         srv = f"[{info['server']}]" if ":" in str(info['server']) else info['server']
         
         if info["type"] == "tuic":
-            links.append(f"tuic://{info['uuid']}%3A{info['uuid']}@{srv}:{info['port']}?sni={info['sni']}&alpn=h3&insecure=1&allowInsecure=1&congestion_control=bbr#{name_enc}")
+            links.append(f"tuic://{info['uuid']}%3A{info['uuid']}@{srv}:{info['port']}?sni={info['sni']}&alpn=h3&insecure=1&allowInsecure=1&congestion_control=cubic#{name_enc}")
         elif info["type"] in ["hysteria2", "hy2"]:
             links.append(f"hysteria2://{info['auth']}@{srv}:{info['port']}?sni={info['sni']}&insecure=1&allowInsecure=1#{name_enc}")
         elif info["type"] == "vless":
@@ -130,22 +118,15 @@ def main():
             rbox = info["tls_data"].get('reality', {})
             pbk = ropts.get('public-key') or rbox.get('public_key')
             sid = ropts.get('short-id') or rbox.get('short_id')
-            if pbk:
-                links.append(f"vless://{info['uuid']}@{srv}:{info['port']}?encryption=none&security=reality&sni={info['sni']}&pbk={pbk}&sid={sid or ''}&type=tcp&headerType=none#{name_enc}")
-        elif info["type"] == "hysteria":
-            links.append(f"hysteria://{srv}:{info['port']}?auth={info['auth']}&sni={info['sni']}&insecure=1&allowInsecure=1#{name_enc}")
+            links.append(f"vless://{info['uuid']}@{srv}:{info['port']}?encryption=none&security=reality&sni={info['sni']}&pbk={pbk}&sid={sid}&type=tcp&headerType=none#{name_enc}")
 
-    # 写入 node.txt (明文)
     unique_links = sorted(list(set(links)))
-    full_text = "\n".join(unique_links)
     with open("node.txt", "w", encoding="utf-8") as f:
-        f.write(full_text)
-
-    # 写入 sub.txt (Base64)
+        f.write("\n".join(unique_links))
     with open("sub.txt", "w", encoding="utf-8") as f:
-        f.write(base64.b64encode(full_text.encode()).decode())
+        f.write(base64.b64encode("\n".join(unique_links).encode()).decode())
 
-    # 3. 生成 Clash YAML
+    # 生成 Clash
     clash_proxies = []
     seen_names = set()
     for n in nodes_data:
@@ -154,33 +135,15 @@ def main():
             clash_proxies.append(p_obj)
             seen_names.add(p_obj["name"])
 
-    if clash_proxies:
-        clash_config = {
-            "port": 7890, "socks-port": 7891, "allow-lan": True, "mode": "rule", "log-level": "info",
-            "proxies": clash_proxies,
-            "proxy-groups": [
-                {
-                    "name": "🚀 节点选择",
-                    "type": "select",
-                    "proxies": [p["name"] for p in clash_proxies] + ["DIRECT"]
-                },
-                {
-                    "name": "⚡ 自动选择",
-                    "type": "url-test",
-                    "url": "http://www.gstatic.com/generate_204",
-                    "interval": 300,
-                    "proxies": [p["name"] for p in clash_proxies]
-                }
-            ],
-            "rules": [
-                "MATCH,🚀 节点选择"
-            ]
-        }
+    clash_config = {
+        "proxies": clash_proxies,
+        "proxy-groups": [{"name": "🚀 节点选择", "type": "select", "proxies": [p["name"] for p in clash_proxies] + ["DIRECT"]}],
+        "rules": ["MATCH,🚀 节点选择"]
+    }
+    with open("clash.yaml", "w", encoding="utf-8") as f:
+        yaml.dump(clash_config, f, allow_unicode=True, sort_keys=False)
 
-        with open("clash.yaml", "w", encoding="utf-8") as f:
-            yaml.dump(clash_config, f, allow_unicode=True, sort_keys=False)
-    
-    print(f"✅ 修正成功！已生成 node.txt, sub.txt, clash.yaml | 时间：{beijing_time}")
+    print(f"✅ 修复完成！时间：{beijing_time}")
 
 if __name__ == "__main__":
     main()
