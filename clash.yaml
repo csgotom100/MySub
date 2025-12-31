@@ -1,5 +1,5 @@
 proxies:
-- name: VLESS_13_1231-1830
+- name: VLESS_13_1231-1833
   server: 195.154.200.13
   port: 17401
   udp: true
@@ -9,7 +9,7 @@ proxies:
   type: vless
   uuid: add14a5b-f648-4423-8a1f-8b8f54c0daef
   network: tcp
-- name: VLESS_44_1231-1830
+- name: VLESS_44_1231-1833
   server: 157.254.223.44
   port: 18959
   udp: true
@@ -23,15 +23,8 @@ proxy-groups:
 - name: 🚀 节点选择
   type: select
   proxies:
-  - VLESS_13_1231-1830
-  - VLESS_44_1231-1830
+  - VLESS_13_1231-1833
+  - VLESS_44_1231-1833
   - DIRECT
-- name: ⚡ 自动选择
-  type: url-test
-  url: http://www.gstatic.com/generate_204
-  interval: 300
-  proxies:
-  - VLESS_13_1231-1830
-  - VLESS_44_1231-1830
 rules:
 - MATCH,🚀 节点选择
