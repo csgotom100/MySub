@@ -31,43 +31,47 @@ URL_SOURCES = [
 ]
 
 def parse_to_link(item):
-    p_type = item.get('type', '').lower()
-    server = item.get('server')
-    port = item.get('port')
+    p_type = str(item.get('type', '')).lower()
+    # 兼容多种 server 字段
+    server = item.get('server') or item.get('add')
+    port = item.get('port') or item.get('port_num')
+    
     if not server or not port: return None
+
+    # 处理 IPv6 地址
+    if ":" in str(server) and "[" not in str(server):
+        server_display = f"[{server}]"
+    else:
+        server_display = server
 
     sni = item.get('tls', {}).get('sni') or item.get('sni', 'www.bing.com')
     
     # 1. Hysteria2
     if p_type == 'hysteria2':
         auth = item.get('auth') or item.get('password')
-        return f"hysteria2://{auth}@{server}:{port}/?sni={sni}&insecure=1"
+        return f"hysteria2://{auth}@{server_display}:{port}/?sni={sni}&insecure=1"
 
     # 2. VLESS
     elif p_type == 'vless':
-        uuid = item.get('uuid')
+        uuid = item.get('uuid') or item.get('id')
         net = item.get('network') or item.get('transport', {}).get('type', 'tcp')
-        return f"vless://{uuid}@{server}:{port}?encryption=none&security=tls&sni={sni}&type={net}"
+        return f"vless://{uuid}@{server_display}:{port}?encryption=none&security=tls&sni={sni}&type={net}"
 
     # 3. Trojan
     elif p_type == 'trojan':
         pw = item.get('password')
-        return f"trojan://{pw}@{server}:{port}?security=tls&sni={sni}"
+        return f"trojan://{pw}@{server_display}:{port}?security=tls&sni={sni}"
 
     # 4. TUIC
     elif p_type == 'tuic':
-        uuid = item.get('uuid') or item.get('password')
-        return f"tuic://{uuid}@{server}:{port}?sni={sni}&insecure=1&alpn=h3"
+        uuid = item.get('uuid') or item.get('id') or item.get('password')
+        return f"tuic://{uuid}@{server_display}:{port}?sni={sni}&insecure=1&alpn=h3"
 
     # 5. VMess
     elif p_type == 'vmess':
-        v2_config = {
-            "v": "2", "ps": "Node", "add": server, "port": port,
-            "id": item.get('uuid') or item.get('id'), "aid": "0", "scy": "auto",
-            "net": "tcp", "type": "none", "host": "", "path": "", "tls": "tls"
-        }
-        v2_json = json.dumps(v2_config)
-        return f"vmess://{base64.b64encode(v2_json.encode()).decode()}"
+        vid = item.get('uuid') or item.get('id')
+        v2_config = {"v": "2", "ps": "Node", "add": server, "port": port, "id": vid, "aid": "0", "scy": "auto", "net": "tcp", "type": "none", "tls": "tls", "sni": sni}
+        return f"vmess://{base64.b64encode(json.dumps(v2_config).encode()).decode()}"
 
     return None
 
@@ -75,41 +79,43 @@ def main():
     unique_links = set()
     for url in URL_SOURCES:
         try:
+            print(f"Fetching: {url}")
             r = requests.get(url, timeout=10)
             if r.status_code != 200: continue
             
-            if url.endswith('.yaml'):
+            # YAML (Clash)
+            if '.yaml' in url or 'clash' in url:
                 data = yaml.safe_load(r.text)
-                for p in data.get('proxies', []):
-                    link = parse_to_link(p)
-                    if link: unique_links.add(link)
+                if isinstance(data, dict):
+                    for p in data.get('proxies', []):
+                        link = parse_to_link(p)
+                        if link: unique_links.add(link)
+            
+            # JSON (Sing-box / Raw)
             else:
                 data = json.loads(r.text)
-                if 'outbounds' in data: # Sing-box 格式
-                    for o in data['outbounds']:
-                        link = parse_to_link(o)
+                if isinstance(data, dict):
+                    if 'outbounds' in data:
+                        for o in data['outbounds']:
+                            link = parse_to_link(o)
+                            if link: unique_links.add(link)
+                    elif data.get('server') or data.get('type'):
+                        link = parse_to_link(data)
                         if link: unique_links.add(link)
-                elif data.get('server'): # 简单 JSON 格式
-                    link = parse_to_link(data)
-                    if link: unique_links.add(link)
         except: continue
 
     if unique_links:
         node_list = sorted(list(unique_links))
         final_list = [f"{link}#Node_{i+1}" for i, link in enumerate(node_list)]
         
-        # 写入第一个文件：加密订阅版 (sub.txt)
-        output_b64 = base64.b64encode("\n".join(final_list).encode()).decode()
+        # 写入文件
         with open("sub.txt", "w") as f:
-            f.write(output_b64)
-            
-        # 写入第二个文件：明文文本版 (nodes.txt)
+            f.write(base64.b64encode("\n".join(final_list).encode()).decode())
         with open("nodes.txt", "w") as f:
             f.write("\n".join(final_list))
-            
-        print(f"✅ 成功！已在 sub.txt 和 nodes.txt 中提取 {len(final_list)} 个节点")
+        print(f"✅ Success! Total nodes: {len(final_list)}")
     else:
-        print("❌ 未抓取到有效节点")
+        print("❌ No nodes found.")
 
 if __name__ == "__main__":
     main()
