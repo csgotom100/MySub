@@ -14,7 +14,7 @@ dns:
   - 8.8.8.8
   - 1.1.1.1
 proxies:
-- name: 02_VLESS_13_0214
+- name: 02_VLESS_13_0846
   type: vless
   server: 195.154.200.13
   port: 17401
@@ -27,7 +27,7 @@ proxies:
     public-key: IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU
     short-id: 8ef4455ba637425b
   client-fingerprint: chrome
-- name: 07_VLESS_v6_0214
+- name: 07_VLESS_v6_0846
   type: vless
   server: 2001:bc8:32d7:181::2
   port: 17401
@@ -40,7 +40,7 @@ proxies:
     public-key: IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU
     short-id: 8ef4455ba637425b
   client-fingerprint: chrome
-- name: 08_VLESS_v6_0214
+- name: 08_VLESS_v6_0846
   type: vless
   server: 2001:bc8:32d7:181::3
   port: 17401
@@ -53,7 +53,7 @@ proxies:
     public-key: IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU
     short-id: 8ef4455ba637425b
   client-fingerprint: chrome
-- name: 09_VLESS_44_0214
+- name: 09_VLESS_44_0846
   type: vless
   server: 157.254.223.44
   port: 18959
@@ -66,7 +66,7 @@ proxies:
     public-key: -hwVEdgFkvjku8ESuDoAA7id5yGGv_zXBvBW_RdhmHA
     short-id: d557c6895d014075
   client-fingerprint: chrome
-- name: 10_VLESS_232_0214
+- name: 10_VLESS_232_0846
   type: vless
   server: 89.144.35.232
   port: 18952
@@ -79,7 +79,7 @@ proxies:
     public-key: cbE6Dwv3-JG7qTLa1QC0nDo33cS0jyeMOkp5pHL65wg
     short-id: 650002d03178115e
   client-fingerprint: chrome
-- name: 11_HYSTERIA2_43_0214
+- name: 11_HYSTERIA2_43_0846
   type: hysteria2
   server: 157.254.223.43
   port: 27921
@@ -87,7 +87,7 @@ proxies:
   tls: true
   sni: apple.com
   skip-cert-verify: true
-- name: 12_HYSTERIA2_146_0214
+- name: 12_HYSTERIA2_146_0846
   type: hysteria2
   server: 62.210.124.146
   port: 22000
@@ -100,24 +100,24 @@ proxy-groups:
   type: select
   proxies:
   - ⚡ 自动选择
-  - 02_VLESS_13_0214
-  - 07_VLESS_v6_0214
-  - 08_VLESS_v6_0214
-  - 09_VLESS_44_0214
-  - 10_VLESS_232_0214
-  - 11_HYSTERIA2_43_0214
-  - 12_HYSTERIA2_146_0214
+  - 02_VLESS_13_0846
+  - 07_VLESS_v6_0846
+  - 08_VLESS_v6_0846
+  - 09_VLESS_44_0846
+  - 10_VLESS_232_0846
+  - 11_HYSTERIA2_43_0846
+  - 12_HYSTERIA2_146_0846
   - DIRECT
 - name: ⚡ 自动选择
   type: url-test
   proxies:
-  - 02_VLESS_13_0214
-  - 07_VLESS_v6_0214
-  - 08_VLESS_v6_0214
-  - 09_VLESS_44_0214
-  - 10_VLESS_232_0214
-  - 11_HYSTERIA2_43_0214
-  - 12_HYSTERIA2_146_0214
+  - 02_VLESS_13_0846
+  - 07_VLESS_v6_0846
+  - 08_VLESS_v6_0846
+  - 09_VLESS_44_0846
+  - 10_VLESS_232_0846
+  - 11_HYSTERIA2_43_0846
+  - 12_HYSTERIA2_146_0846
   url: http://www.gstatic.com/generate_204
   interval: 300
 - name: 🌍 全球直连
