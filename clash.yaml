@@ -14,7 +14,7 @@ dns:
   - 8.8.8.8
   - 1.1.1.1
 proxies:
-- name: 01_HYSTERIA2_30_0215
+- name: 01_HYSTERIA2_30_0846
   type: hysteria2
   server: 89.144.35.30
   port: 23008
@@ -22,7 +22,7 @@ proxies:
   tls: true
   sni: apple.com
   skip-cert-verify: true
-- name: 02_HYSTERIA2_33_0215
+- name: 02_HYSTERIA2_33_0846
   type: hysteria2
   server: 5.178.101.33
   port: 23008
@@ -30,7 +30,7 @@ proxies:
   tls: true
   sni: apple.com
   skip-cert-verify: true
-- name: 03_VLESS_13_0215
+- name: 03_VLESS_13_0846
   type: vless
   server: 195.154.200.13
   port: 17401
@@ -43,7 +43,7 @@ proxies:
     public-key: IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU
     short-id: 8ef4455ba637425b
   client-fingerprint: chrome
-- name: 04_HYSTERIA2_node_0215
+- name: 04_HYSTERIA2_node_0846
   type: hysteria2
   server: 2001:bc8:32d7:402::3
   port: 20001
@@ -51,7 +51,7 @@ proxies:
   tls: true
   sni: apple.com
   skip-cert-verify: true
-- name: 05_HYSTERIA2_node_0215
+- name: 05_HYSTERIA2_node_0846
   type: hysteria2
   server: 2001:bc8:32d7:402::4
   port: 20001
@@ -59,7 +59,7 @@ proxies:
   tls: true
   sni: apple.com
   skip-cert-verify: true
-- name: 06_HYSTERIA2_14_0215
+- name: 06_HYSTERIA2_14_0846
   type: hysteria2
   server: 45.221.98.14
   port: 59901
@@ -67,7 +67,7 @@ proxies:
   tls: true
   sni: ''
   skip-cert-verify: true
-- name: 07_VLESS_node_0215
+- name: 07_VLESS_node_0846
   type: vless
   server: 2001:bc8:32d7:181::2
   port: 17401
@@ -80,7 +80,7 @@ proxies:
     public-key: IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU
     short-id: 8ef4455ba637425b
   client-fingerprint: chrome
-- name: 08_VLESS_node_0215
+- name: 08_VLESS_node_0846
   type: vless
   server: 2001:bc8:32d7:181::3
   port: 17401
@@ -93,7 +93,7 @@ proxies:
     public-key: IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU
     short-id: 8ef4455ba637425b
   client-fingerprint: chrome
-- name: 09_VLESS_44_0215
+- name: 09_VLESS_44_0846
   type: vless
   server: 157.254.223.44
   port: 18959
@@ -106,7 +106,7 @@ proxies:
     public-key: -hwVEdgFkvjku8ESuDoAA7id5yGGv_zXBvBW_RdhmHA
     short-id: d557c6895d014075
   client-fingerprint: chrome
-- name: 10_VLESS_232_0215
+- name: 10_VLESS_232_0846
   type: vless
   server: 89.144.35.232
   port: 15531
@@ -119,7 +119,7 @@ proxies:
     public-key: o4gXQf1n5YOoLo6OnyHykodK1ZShHvDqu1FgxNHe6n8
     short-id: 8346964417a2552b
   client-fingerprint: chrome
-- name: 11_HYSTERIA2_43_0215
+- name: 11_HYSTERIA2_43_0846
   type: hysteria2
   server: 157.254.223.43
   port: 27921
@@ -127,7 +127,7 @@ proxies:
   tls: true
   sni: apple.com
   skip-cert-verify: true
-- name: 12_HYSTERIA2_146_0215
+- name: 12_HYSTERIA2_146_0846
   type: hysteria2
   server: 62.210.124.146
   port: 22000
@@ -140,34 +140,34 @@ proxy-groups:
   type: select
   proxies:
   - ⚡ 自动选择
-  - 01_HYSTERIA2_30_0215
-  - 02_HYSTERIA2_33_0215
-  - 03_VLESS_13_0215
-  - 04_HYSTERIA2_node_0215
-  - 05_HYSTERIA2_node_0215
-  - 06_HYSTERIA2_14_0215
-  - 07_VLESS_node_0215
-  - 08_VLESS_node_0215
-  - 09_VLESS_44_0215
-  - 10_VLESS_232_0215
-  - 11_HYSTERIA2_43_0215
-  - 12_HYSTERIA2_146_0215
+  - 01_HYSTERIA2_30_0846
+  - 02_HYSTERIA2_33_0846
+  - 03_VLESS_13_0846
+  - 04_HYSTERIA2_node_0846
+  - 05_HYSTERIA2_node_0846
+  - 06_HYSTERIA2_14_0846
+  - 07_VLESS_node_0846
+  - 08_VLESS_node_0846
+  - 09_VLESS_44_0846
+  - 10_VLESS_232_0846
+  - 11_HYSTERIA2_43_0846
+  - 12_HYSTERIA2_146_0846
   - DIRECT
 - name: ⚡ 自动选择
   type: url-test
   proxies:
-  - 01_HYSTERIA2_30_0215
-  - 02_HYSTERIA2_33_0215
-  - 03_VLESS_13_0215
-  - 04_HYSTERIA2_node_0215
-  - 05_HYSTERIA2_node_0215
-  - 06_HYSTERIA2_14_0215
-  - 07_VLESS_node_0215
-  - 08_VLESS_node_0215
-  - 09_VLESS_44_0215
-  - 10_VLESS_232_0215
-  - 11_HYSTERIA2_43_0215
-  - 12_HYSTERIA2_146_0215
+  - 01_HYSTERIA2_30_0846
+  - 02_HYSTERIA2_33_0846
+  - 03_VLESS_13_0846
+  - 04_HYSTERIA2_node_0846
+  - 05_HYSTERIA2_node_0846
+  - 06_HYSTERIA2_14_0846
+  - 07_VLESS_node_0846
+  - 08_VLESS_node_0846
+  - 09_VLESS_44_0846
+  - 10_VLESS_232_0846
+  - 11_HYSTERIA2_43_0846
+  - 12_HYSTERIA2_146_0846
   url: http://www.gstatic.com/generate_204
   interval: 300
 - name: 🌍 全球直连
