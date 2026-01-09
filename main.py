@@ -1,32 +1,40 @@
-import json, requests, base64, yaml, urllib.parse, warnings
+import json, requests, base64, yaml, urllib.parse, os, re, warnings
 from datetime import datetime, timedelta
 
 # 忽略不安全的 HTTPS 请求警告
 warnings.filterwarnings("ignore")
 
-# 订阅源列表
-URL_SOURCES = [
-    "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/clash.meta2/1/config.yaml",
-    "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/clash.meta2/2/config.yaml",
-    "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/clash.meta2/3/config.yaml",
-    "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ipp/singbox/1/config.json",
-    "https://www.gitlabip.xyz/Alvin9999/PAC/refs/heads/master/backup/img/1/2/ip/singbox/2/config.json",
-    "https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/hysteria2/1/config.json",
-    "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ipp/hysteria2/2/config.json",
-    "https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/hysteria2/3/config.json",
-    "https://fastly.jsdelivr.net/gh/Alvin9999/PAC@latest/backup/img/1/2/ipp/hysteria2/4/config.json"
-]
+def get_beijing_time():
+    return (datetime.utcnow() + timedelta(hours=8)).strftime("%m-%d %H:%M")
+
+def get_geo_tag(text, server):
+    """打磨地理位置匹配：增加常用地区图标"""
+    words = {
+        "🇭🇰": ["hk", "香港", "hongkong", "hkg"],
+        "🇺🇸": ["us", "美国", "states", "america", "united"],
+        "🇯🇵": ["jp", "日本", "tokyo", "japan", "osaka"],
+        "🇸🇬": ["sg", "新加坡", "singapore", "sin"],
+        "🇹🇼": ["tw", "台湾", "taiwan"],
+        "🇰🇷": ["kr", "韩国", "korea", "seoul"],
+        "🇫🇷": ["fr", "法国", "france"]
+    }
+    # 综合搜索：节点标签、服务器地址、SNI
+    content = str(text).lower() + str(server).lower()
+    for tag, keys in words.items():
+        if any(k in content for k in keys):
+            return tag
+    return "🌐"
 
 def get_node_info(item):
+    """深度打磨：支持 VLESS, Hy2, TUIC, AnyTLS"""
     try:
         if not isinstance(item, dict): return None
         raw_server = item.get('server') or item.get('add') or item.get('address')
         if not raw_server or str(raw_server).startswith('127.'): return None
         
+        # 1. 服务器地址与端口清洗
         server_str = str(raw_server).strip()
         server, port = "", ""
-        
-        # 处理带有端口的地址格式
         if ']:' in server_str: 
             server, port = server_str.split(']:')[0] + ']', server_str.split(']:')[1]
         elif server_str.startswith('[') and ']' in server_str:
@@ -36,47 +44,57 @@ def get_node_info(item):
         else:
             server, port = server_str, (item.get('port') or item.get('server_port') or item.get('port_num'))
 
-        if port: port = str(port).split(',')[0].split('-')[0].split('/')[0].strip()
-        if not server or not port: return None
+        if port: # 关键：处理 28000-29000 这种格式，只取第一个数字
+            port = str(port).split(',')[0].split('-')[0].split('/')[0].strip()
+        if not server or not port or 'None' in str(port): return None
 
-        # 提取密钥/密码
-        secret = item.get('auth') or item.get('auth_str') or item.get('auth-str') or \
-                 item.get('password') or item.get('uuid') or item.get('id')
+        # 2. 提取密钥（打磨：适配更多协议字段）
+        secret = item.get('auth') or item.get('auth_str') or item.get('password') or \
+                 item.get('uuid') or item.get('id') or item.get('token')
         if not secret: return None
 
-        # 判定协议类型
-        p_type = str(item.get('type', '')).lower()
-        if any(x in p_type for x in ['hy2', 'hysteria2']) or 'auth' in item:
+        # 3. 判定协议类型 (打磨关键点)
+        p_raw = str(item.get('type') or item.get('protocol', '')).lower()
+        if any(x in p_raw for x in ['hy2', 'hysteria2']) or 'auth' in item:
             p_type = 'hysteria2'
-        elif any(x in p_type for x in ['vless']):
+        elif 'tuic' in p_raw:
+            p_type = 'tuic'
+        elif 'anytls' in p_raw:
+            p_type = 'anytls'
+        elif 'vless' in p_raw or 'uuid' in item:
             p_type = 'vless'
         else:
-            p_type = 'vless' if 'uuid' in item else 'hysteria2'
+            return None # 无法识别的丢弃
 
-        # 提取 TLS/SNI 信息 (修复关键点)
+        # 4. 提取 TLS/SNI/Reality
         tls_obj = item.get('tls', {}) if isinstance(item.get('tls'), dict) else {}
-        sni = item.get('servername') or item.get('sni') or tls_obj.get('server_name') or tls_obj.get('sni') or ""
+        sni = item.get('servername') or item.get('sni') or tls_obj.get('server_name') or ""
         
-        # 提取 REALITY 核心参数
         reality_obj = item.get('reality-opts') or tls_obj.get('reality') or item.get('reality') or {}
-        if not isinstance(reality_obj, dict): reality_obj = {}
         pbk = reality_obj.get('public-key') or reality_obj.get('public_key') or item.get('public-key') or ""
         sid = reality_obj.get('short-id') or reality_obj.get('short_id') or item.get('short-id') or ""
         
+        # 提取 xhttp 路径
+        xh_obj = item.get('xhttp-opts') or item.get('xhttp') or {}
+        xh_path = xh_obj.get('path') or ""
+
         return {
-            "server": server, "port": int(port), "type": p_type, 
-            "sni": sni, "secret": secret, "pbk": pbk, "sid": sid, "raw_server": server_str
+            "server": server, "port": port, "type": p_type, "secret": secret,
+            "sni": sni, "pbk": pbk, "sid": sid, "path": xh_path, 
+            "tag": item.get('tag') or item.get('name') or ""
         }
     except: return None
 
 def main():
     raw_nodes_data = []
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-    
-    # 1. 抓取与解析
-    for url in URL_SOURCES:
+    # 依然从 sources.txt 读取，保证源的灵活性
+    if not os.path.exists('sources.txt'): return
+    with open('sources.txt', 'r', encoding='utf-8') as f:
+        urls = [l.strip() for l in f if l.startswith('http')]
+
+    for url in urls:
         try:
-            r = requests.get(url, headers=headers, timeout=15, verify=False)
+            r = requests.get(url, timeout=15, verify=False)
             if r.status_code != 200: continue
             content = r.text.strip()
             data = json.loads(content) if (content.startswith('{') or content.startswith('[')) else yaml.safe_load(content)
@@ -93,91 +111,64 @@ def main():
             for d in extract_dicts(data):
                 node = get_node_info(d)
                 if node: raw_nodes_data.append(node)
-        except Exception: continue
+        except: continue
 
-    # 2. 去重逻辑
-    unique_configs = []
-    seen_configs = set()
+    # 去重逻辑
+    unique_nodes = []
+    seen = set()
     for n in raw_nodes_data:
-        config_key = (n['type'], n['raw_server'], n['port'], n['secret'], n['pbk'])
-        if config_key not in seen_configs:
-            unique_configs.append(n)
-            seen_configs.add(config_key)
+        key = (n['server'], n['port'], n['secret'], n['type'])
+        if key not in seen:
+            unique_nodes.append(n); seen.add(key)
 
-    clash_proxies = []
+    # 排序：AnyTLS 永远第一
+    unique_nodes.sort(key=lambda x: 0 if x['type'] == 'anytls' else 1)
+
     uri_links = []
-    # 北京时间戳
-    beijing_time = (datetime.utcnow() + timedelta(hours=8)).strftime("%H%M")
-    
-    # 3. 格式化输出 (修复 VLESS 链接字段)
-    for index, n in enumerate(unique_configs, start=1):
-        tag = n['server'].split('.')[-1].replace(']', '') if '.' in n['server'] else "node"
-        node_name = f"{index:02d}_{n['type'].upper()}_{tag}_{beijing_time}"
+    time_tag = get_beijing_time()
+    for i, n in enumerate(unique_nodes, 1):
+        # 加上打磨后的地理标志
+        geo = get_geo_tag(n['tag'] + n['sni'], n['server'])
+        node_name = f"{geo}[{n['type'].upper()}] {i:02d} ({time_tag})"
         name_enc = urllib.parse.quote(node_name)
         
-        # 适配 IPv6 地址括号
+        # 适配 IPv6 URI 格式
         srv_uri = n['server']
         if ':' in srv_uri and not srv_uri.startswith('['):
             srv_uri = f"[{srv_uri}]"
-        srv_clash = n['server'].replace('[','').replace(']','')
         
-        if n["type"] == "hysteria2":
-            uri_links.append(f"hysteria2://{n['secret']}@{srv_uri}:{n['port']}?insecure=1&allowInsecure=1&sni={n['sni']}#{name_enc}")
-            clash_proxies.append({
-                "name": node_name, "type": "hysteria2", "server": srv_clash, "port": n["port"], 
-                "password": n["secret"], "tls": True, "sni": n["sni"], "skip-cert-verify": True
-            })
-            
-        elif n["type"] == "vless" and n['pbk']:
-            # 修正后的 VLESS 链接构建
-            vless_uri = (
-                f"vless://{n['secret']}@{srv_uri}:{n['port']}?"
-                f"encryption=none&security=reality&type=tcp&"
-                f"sni={n['sni']}&fp=chrome&pbk={n['pbk']}&sid={n['sid']}&headerType=none"
-                f"#{name_enc}"
-            )
-            uri_links.append(vless_uri)
-            
-            # Clash 对应配置
-            clash_proxies.append({
-                "name": node_name, "type": "vless", "server": srv_clash, "port": n["port"], 
-                "uuid": n["secret"], "tls": True, "udp": True, "servername": n["sni"], 
-                "network": "tcp", "reality-opts": {"public-key": n["pbk"], "short-id": n["sid"]}, 
-                "client-fingerprint": "chrome"
-            })
+        # 格式化不同协议的 URI
+        if n['type'] == 'hysteria2':
+            uri_links.append(f"hysteria2://{n['secret']}@{srv_uri}:{n['port']}?insecure=1&sni={n['sni']}#{name_enc}")
+        elif n['type'] == 'vless':
+            params = {"security": "reality" if n['pbk'] else "none", "sni": n['sni'], "pbk": n['pbk'], "sid": n['sid']}
+            if n['path']: params.update({"type": "xhttp", "path": n['path']})
+            uri_links.append(f"vless://{n['secret']}@{srv_uri}:{n['port']}?{urllib.parse.urlencode({k:v for k,v in params.items() if v})}#{name_enc}")
+        elif n['type'] == 'anytls':
+            uri_links.append(f"anytls://{n['secret']}@{srv_uri}:{n['port']}?alpn=h3&insecure=1#{name_enc}")
+        elif n['type'] == 'tuic':
+            uri_links.append(f"tuic://{n['secret']}@{srv_uri}:{n['port']}?sni={n['sni']}&alpn=h3#{name_enc}")
 
-    # 4. 生成 Clash 配置结构
-    p_names = [p["name"] for p in clash_proxies]
-    clash_config = {
-        "port": 7890, "socks-port": 7891, "allow-lan": True, "mode": "rule", "log-level": "info",
-        "dns": {"enable": True, "ipv6": False, "enhanced-mode": "fake-ip", "nameserver": ["223.5.5.5", "119.29.29.29"], "fallback": ["8.8.8.8", "1.1.1.1"]},
-        "proxies": clash_proxies,
-        "proxy-groups": [
-            {"name": "🚀 节点选择", "type": "select", "proxies": ["⚡ 自动选择"] + p_names + ["DIRECT"]},
-            {"name": "⚡ 自动选择", "type": "url-test", "proxies": p_names, "url": "http://www.gstatic.com/generate_204", "interval": 300},
-            {"name": "🌍 全球直连", "type": "select", "proxies": ["DIRECT", "🚀 节点选择"]},
-            {"name": "🛑 广告拦截", "type": "select", "proxies": ["REJECT", "DIRECT", "🚀 节点选择"]},
-            {"name": "🐟 漏网之鱼", "type": "select", "proxies": ["🚀 节点选择", "DIRECT", "⚡ 自动选择"]}
-        ],
-        "rules": [
-            "GEOIP,LAN,DIRECT",
-            "GEOIP,CN,🌍 全球直连",
-            "MATCH,🐟 漏网之鱼"
-        ]
-    }
-
-    # 5. 写入文件
-    try:
-        with open("node.txt", "w", encoding="utf-8") as f: 
-            f.write("\n".join(uri_links))
-        with open("sub.txt", "w", encoding="utf-8") as f: 
-            f.write(base64.b64encode("\n".join(uri_links).encode()).decode())
-        with open("clash.yaml", "w", encoding="utf-8") as f: 
-            yaml.dump(clash_config, f, allow_unicode=True, sort_keys=False)
-        
-        print(f"✅ 处理完成! 捕获有效节点: {len(clash_proxies)}")
-    except Exception as e:
-        print(f"❌ 写入文件失败: {e}")
+    # 写入文件
+    with open("sub.txt", "w", encoding="utf-8") as f: f.write("\n".join(uri_links))
+    with open("sub_base64.txt", "w", encoding="utf-8") as f:
+        f.write(base64.b64encode("\n".join(uri_links).encode()).decode())
+    
+    # 关键：生成 config.yaml 供 v2rayN 导入自定义服务器 (这是支持 TUIC 最稳的方式)
+    clash_proxies = []
+    for i, n in enumerate(unique_nodes, 1):
+        geo = get_geo_tag(n['tag'] + n['sni'], n['server'])
+        p = {"name": f"{geo}[{n['type'].upper()}] {i:02d}", "server": n['server'].replace('[','').replace(']',''), "port": int(n['port'])}
+        if n['type'] == 'vless':
+            p.update({"type": "vless", "uuid": n['secret'], "tls": True, "servername": n['sni'], "reality-opts": {"public-key": n['pbk'], "short-id": n['sid']}})
+        elif n['type'] == 'hysteria2':
+            p.update({"type": "hysteria2", "password": n['secret'], "sni": n['sni'], "skip-cert-verify": True})
+        elif n['type'] == 'tuic':
+            p.update({"type": "tuic", "uuid": n['secret'], "sni": n['sni'], "alpn": ["h3"]})
+        clash_proxies.append(p)
+    
+    with open("config.yaml", "w", encoding="utf-8") as f:
+        yaml.dump({"proxies": clash_proxies}, f, allow_unicode=True, sort_keys=False)
 
 if __name__ == "__main__":
     main()
