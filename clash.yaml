@@ -14,15 +14,7 @@ dns:
   - 8.8.8.8
   - 1.1.1.1
 proxies:
-- name: 01_HYSTERIA2_xyz_0856
-  type: hysteria2
-  server: ip1.758733.xyz
-  port: 23008
-  password: alvin9999.com
-  tls: true
-  sni: apple.com
-  skip-cert-verify: true
-- name: 02_VLESS_node_0856
+- name: 02_VLESS_node_1438
   type: vless
   server: 2001:bc8:32d7:181::2
   port: 17401
@@ -35,7 +27,7 @@ proxies:
     public-key: IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU
     short-id: 8ef4455ba637425b
   client-fingerprint: chrome
-- name: 03_VLESS_node_0856
+- name: 03_VLESS_node_1438
   type: vless
   server: 2001:bc8:32d7:181::3
   port: 17401
@@ -48,7 +40,7 @@ proxies:
     public-key: IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU
     short-id: 8ef4455ba637425b
   client-fingerprint: chrome
-- name: 04_VLESS_node_0856
+- name: 04_VLESS_node_1438
   type: vless
   server: 2001:bc8:32d7:181::4
   port: 17401
@@ -61,7 +53,7 @@ proxies:
     public-key: IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU
     short-id: 8ef4455ba637425b
   client-fingerprint: chrome
-- name: 05_VLESS_node_0856
+- name: 05_VLESS_node_1438
   type: vless
   server: 2001:bc8:32d7:181::5
   port: 17401
@@ -74,7 +66,7 @@ proxies:
     public-key: IXcXrT_Y0ATTZlGOhPnSmKo-cuGr4yMKV9Rz4-nA3yU
     short-id: 8ef4455ba637425b
   client-fingerprint: chrome
-- name: 06_HYSTERIA2_14_0856
+- name: 06_HYSTERIA2_14_1438
   type: hysteria2
   server: 45.221.98.14
   port: 59901
@@ -82,7 +74,7 @@ proxies:
   tls: true
   sni: ''
   skip-cert-verify: true
-- name: 07_VLESS_44_0856
+- name: 07_VLESS_44_1438
   type: vless
   server: 157.254.223.44
   port: 18959
@@ -95,7 +87,7 @@ proxies:
     public-key: -hwVEdgFkvjku8ESuDoAA7id5yGGv_zXBvBW_RdhmHA
     short-id: d557c6895d014075
   client-fingerprint: chrome
-- name: 08_VLESS_232_0856
+- name: 08_VLESS_232_1438
   type: vless
   server: 89.144.35.232
   port: 15531
@@ -108,7 +100,7 @@ proxies:
     public-key: o4gXQf1n5YOoLo6OnyHykodK1ZShHvDqu1FgxNHe6n8
     short-id: 8346964417a2552b
   client-fingerprint: chrome
-- name: 09_HYSTERIA2_34_0856
+- name: 09_HYSTERIA2_34_1438
   type: hysteria2
   server: 89.144.35.34
   port: 50022
@@ -116,7 +108,7 @@ proxies:
   tls: true
   sni: apple.com
   skip-cert-verify: true
-- name: 10_HYSTERIA2_146_0856
+- name: 10_HYSTERIA2_146_1438
   type: hysteria2
   server: 62.210.124.146
   port: 22000
@@ -129,30 +121,28 @@ proxy-groups:
   type: select
   proxies:
   - ⚡ 自动选择
-  - 01_HYSTERIA2_xyz_0856
-  - 02_VLESS_node_0856
-  - 03_VLESS_node_0856
-  - 04_VLESS_node_0856
-  - 05_VLESS_node_0856
-  - 06_HYSTERIA2_14_0856
-  - 07_VLESS_44_0856
-  - 08_VLESS_232_0856
-  - 09_HYSTERIA2_34_0856
-  - 10_HYSTERIA2_146_0856
+  - 02_VLESS_node_1438
+  - 03_VLESS_node_1438
+  - 04_VLESS_node_1438
+  - 05_VLESS_node_1438
+  - 06_HYSTERIA2_14_1438
+  - 07_VLESS_44_1438
+  - 08_VLESS_232_1438
+  - 09_HYSTERIA2_34_1438
+  - 10_HYSTERIA2_146_1438
   - DIRECT
 - name: ⚡ 自动选择
   type: url-test
   proxies:
-  - 01_HYSTERIA2_xyz_0856
-  - 02_VLESS_node_0856
-  - 03_VLESS_node_0856
-  - 04_VLESS_node_0856
-  - 05_VLESS_node_0856
-  - 06_HYSTERIA2_14_0856
-  - 07_VLESS_44_0856
-  - 08_VLESS_232_0856
-  - 09_HYSTERIA2_34_0856
-  - 10_HYSTERIA2_146_0856
+  - 02_VLESS_node_1438
+  - 03_VLESS_node_1438
+  - 04_VLESS_node_1438
+  - 05_VLESS_node_1438
+  - 06_HYSTERIA2_14_1438
+  - 07_VLESS_44_1438
+  - 08_VLESS_232_1438
+  - 09_HYSTERIA2_34_1438
+  - 10_HYSTERIA2_146_1438
   url: http://www.gstatic.com/generate_204
   interval: 300
 - name: 🌍 全球直连
