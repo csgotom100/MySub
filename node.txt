@@ -1,2 +1,2 @@
-hysteria2://dongtaiwang.com@157.254.223.43:27921?insecure=1&allowInsecure=1&sni=www.bing.com#05_HYSTERIA2_43_1500
-hysteria2://dongtaiwang.com@[2001:bc8:32d7:17b::3]:22000?insecure=1&allowInsecure=1&sni=www.microsoft.com#06_HYSTERIA2_node_1500
+hysteria2://dongtaiwang.com@157.254.223.43:27921?insecure=1&allowInsecure=1&sni=www.bing.com#05_HYSTERIA2_43_2049
+hysteria2://dongtaiwang.com@[2001:bc8:32d7:17b::3]:22000?insecure=1&allowInsecure=1&sni=www.microsoft.com#06_HYSTERIA2_node_2049
