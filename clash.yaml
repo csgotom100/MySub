@@ -14,15 +14,15 @@ dns:
   - 8.8.8.8
   - 1.1.1.1
 proxies:
-- name: 05_HYSTERIA2_43_0324
+- name: 05_HYSTERIA2_108_0947
   type: hysteria2
-  server: 157.254.223.43
-  port: 27921
+  server: 62.210.10.108
+  port: 22000
   password: dongtaiwang.com
   tls: true
-  sni: www.bing.com
+  sni: www.microsoft.com
   skip-cert-verify: true
-- name: 06_HYSTERIA2_node_0324
+- name: 06_HYSTERIA2_node_0947
   type: hysteria2
   server: 2001:bc8:32d7:17b::3
   port: 22000
@@ -35,14 +35,14 @@ proxy-groups:
   type: select
   proxies:
   - ⚡ 自动选择
-  - 05_HYSTERIA2_43_0324
-  - 06_HYSTERIA2_node_0324
+  - 05_HYSTERIA2_108_0947
+  - 06_HYSTERIA2_node_0947
   - DIRECT
 - name: ⚡ 自动选择
   type: url-test
   proxies:
-  - 05_HYSTERIA2_43_0324
-  - 06_HYSTERIA2_node_0324
+  - 05_HYSTERIA2_108_0947
+  - 06_HYSTERIA2_node_0947
   url: http://www.gstatic.com/generate_204
   interval: 300
 - name: 🌍 全球直连
