@@ -14,7 +14,7 @@ dns:
   - 8.8.8.8
   - 1.1.1.1
 proxies:
-- name: 05_HYSTERIA2_108_2157
+- name: 05_HYSTERIA2_108_0326
   type: hysteria2
   server: 62.210.10.108
   port: 22000
@@ -22,7 +22,7 @@ proxies:
   tls: true
   sni: www.microsoft.com
   skip-cert-verify: true
-- name: 06_HYSTERIA2_node_2157
+- name: 06_HYSTERIA2_node_0326
   type: hysteria2
   server: 2001:bc8:32d7:17b::3
   port: 22000
@@ -35,14 +35,14 @@ proxy-groups:
   type: select
   proxies:
   - ⚡ 自动选择
-  - 05_HYSTERIA2_108_2157
-  - 06_HYSTERIA2_node_2157
+  - 05_HYSTERIA2_108_0326
+  - 06_HYSTERIA2_node_0326
   - DIRECT
 - name: ⚡ 自动选择
   type: url-test
   proxies:
-  - 05_HYSTERIA2_108_2157
-  - 06_HYSTERIA2_node_2157
+  - 05_HYSTERIA2_108_0326
+  - 06_HYSTERIA2_node_0326
   url: http://www.gstatic.com/generate_204
   interval: 300
 - name: 🌍 全球直连
