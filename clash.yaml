@@ -14,7 +14,7 @@ dns:
   - 8.8.8.8
   - 1.1.1.1
 proxies:
-- name: 01_HYSTERIA2_98_1649
+- name: 01_HYSTERIA2_98_2231
   type: hysteria2
   server: 62.210.29.98
   port: 10066
@@ -22,7 +22,7 @@ proxies:
   tls: true
   sni: bing.com
   skip-cert-verify: true
-- name: 02_HYSTERIA2_163_1649
+- name: 02_HYSTERIA2_163_2231
   type: hysteria2
   server: 163.172.117.163
   port: 36699
@@ -30,7 +30,7 @@ proxies:
   tls: true
   sni: bing.com
   skip-cert-verify: true
-- name: 06_HYSTERIA2_108_1649
+- name: 06_HYSTERIA2_108_2231
   type: hysteria2
   server: 62.210.10.108
   port: 22000
@@ -38,7 +38,7 @@ proxies:
   tls: true
   sni: www.microsoft.com
   skip-cert-verify: true
-- name: 07_HYSTERIA2_node_1649
+- name: 07_HYSTERIA2_node_2231
   type: hysteria2
   server: 2001:bc8:32d7:17b::3
   port: 22000
@@ -51,18 +51,18 @@ proxy-groups:
   type: select
   proxies:
   - ⚡ 自动选择
-  - 01_HYSTERIA2_98_1649
-  - 02_HYSTERIA2_163_1649
-  - 06_HYSTERIA2_108_1649
-  - 07_HYSTERIA2_node_1649
+  - 01_HYSTERIA2_98_2231
+  - 02_HYSTERIA2_163_2231
+  - 06_HYSTERIA2_108_2231
+  - 07_HYSTERIA2_node_2231
   - DIRECT
 - name: ⚡ 自动选择
   type: url-test
   proxies:
-  - 01_HYSTERIA2_98_1649
-  - 02_HYSTERIA2_163_1649
-  - 06_HYSTERIA2_108_1649
-  - 07_HYSTERIA2_node_1649
+  - 01_HYSTERIA2_98_2231
+  - 02_HYSTERIA2_163_2231
+  - 06_HYSTERIA2_108_2231
+  - 07_HYSTERIA2_node_2231
   url: http://www.gstatic.com/generate_204
   interval: 300
 - name: 🌍 全球直连
