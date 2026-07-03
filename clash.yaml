@@ -14,15 +14,15 @@ dns:
   - 8.8.8.8
   - 1.1.1.1
 proxies:
-- name: 01_HYSTERIA2_xyz_0303
+- name: 01_HYSTERIA2_191_0925
   type: hysteria2
-  server: clash-ip1.934618.xyz
-  port: 18271
+  server: 62.210.70.191
+  port: 23556
   password: github.com/Alvin9999-newpac/fanqiang
   tls: true
-  sni: clash-ip1.934618.xyz
+  sni: bing.com
   skip-cert-verify: true
-- name: 02_HYSTERIA2_163_0303
+- name: 02_HYSTERIA2_163_0925
   type: hysteria2
   server: 163.172.117.163
   port: 36699
@@ -30,15 +30,15 @@ proxies:
   tls: true
   sni: bing.com
   skip-cert-verify: true
-- name: 06_HYSTERIA2_xyz_0303
+- name: 06_HYSTERIA2_216_0925
   type: hysteria2
-  server: www.838491.xyz
-  port: 13377
-  password: dongtaiwang.com
+  server: 62.210.27.216
+  port: 60111
+  password: github.com/Alvin9999-newpac/fanqiang
   tls: true
-  sni: www.838491.xyz
+  sni: bing.com
   skip-cert-verify: true
-- name: 07_HYSTERIA2_node_0303
+- name: 07_HYSTERIA2_node_0925
   type: hysteria2
   server: 2001:bc8:32d7:17b::3
   port: 22000
@@ -51,18 +51,18 @@ proxy-groups:
   type: select
   proxies:
   - ⚡ 自动选择
-  - 01_HYSTERIA2_xyz_0303
-  - 02_HYSTERIA2_163_0303
-  - 06_HYSTERIA2_xyz_0303
-  - 07_HYSTERIA2_node_0303
+  - 01_HYSTERIA2_191_0925
+  - 02_HYSTERIA2_163_0925
+  - 06_HYSTERIA2_216_0925
+  - 07_HYSTERIA2_node_0925
   - DIRECT
 - name: ⚡ 自动选择
   type: url-test
   proxies:
-  - 01_HYSTERIA2_xyz_0303
-  - 02_HYSTERIA2_163_0303
-  - 06_HYSTERIA2_xyz_0303
-  - 07_HYSTERIA2_node_0303
+  - 01_HYSTERIA2_191_0925
+  - 02_HYSTERIA2_163_0925
+  - 06_HYSTERIA2_216_0925
+  - 07_HYSTERIA2_node_0925
   url: http://www.gstatic.com/generate_204
   interval: 300
 - name: 🌍 全球直连
