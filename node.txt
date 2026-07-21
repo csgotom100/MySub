@@ -1,4 +1,4 @@
-hysteria2://github.com/Alvin9999-newpac/fanqiang@62.210.70.191:23556?insecure=1&allowInsecure=1&sni=bing.com#01_HYSTERIA2_191_2107
-hysteria2://dongtaiwang.com@163.172.117.163:36699?insecure=1&allowInsecure=1&sni=bing.com#02_HYSTERIA2_163_2107
-hysteria2://github.com/Alvin9999-newpac/fanqiang@62.210.7.139:60111?insecure=1&allowInsecure=1&sni=bing.com#05_HYSTERIA2_139_2107
-hysteria2://dongtaiwang.com@[2001:bc8:32d7:17b::3]:22000?insecure=1&allowInsecure=1&sni=www.microsoft.com#06_HYSTERIA2_node_2107
+hysteria2://github.com/Alvin9999-newpac/fanqiang@62.210.70.191:23556?insecure=1&allowInsecure=1&sni=bing.com#01_HYSTERIA2_191_0259
+hysteria2://dongtaiwang.com@163.172.117.163:36699?insecure=1&allowInsecure=1&sni=bing.com#02_HYSTERIA2_163_0259
+hysteria2://github.com/Alvin9999-newpac/fanqiang@62.210.7.139:60111?insecure=1&allowInsecure=1&sni=bing.com#05_HYSTERIA2_139_0259
+hysteria2://dongtaiwang.com@[2001:bc8:32d7:17b::3]:22000?insecure=1&allowInsecure=1&sni=www.microsoft.com#06_HYSTERIA2_node_0259
