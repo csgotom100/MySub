@@ -14,7 +14,7 @@ dns:
   - 8.8.8.8
   - 1.1.1.1
 proxies:
-- name: 01_HYSTERIA2_191_0849
+- name: 01_HYSTERIA2_191_1501
   type: hysteria2
   server: 62.210.70.191
   port: 23556
@@ -22,7 +22,7 @@ proxies:
   tls: true
   sni: bing.com
   skip-cert-verify: true
-- name: 02_HYSTERIA2_163_0849
+- name: 02_HYSTERIA2_163_1501
   type: hysteria2
   server: 163.172.117.163
   port: 36699
@@ -30,7 +30,7 @@ proxies:
   tls: true
   sni: bing.com
   skip-cert-verify: true
-- name: 03_HYSTERIA2_node_0849
+- name: 03_HYSTERIA2_node_1501
   type: hysteria2
   server: 2001:bc8:32d7:17b::3
   port: 22000
@@ -43,16 +43,16 @@ proxy-groups:
   type: select
   proxies:
   - ⚡ 自动选择
-  - 01_HYSTERIA2_191_0849
-  - 02_HYSTERIA2_163_0849
-  - 03_HYSTERIA2_node_0849
+  - 01_HYSTERIA2_191_1501
+  - 02_HYSTERIA2_163_1501
+  - 03_HYSTERIA2_node_1501
   - DIRECT
 - name: ⚡ 自动选择
   type: url-test
   proxies:
-  - 01_HYSTERIA2_191_0849
-  - 02_HYSTERIA2_163_0849
-  - 03_HYSTERIA2_node_0849
+  - 01_HYSTERIA2_191_1501
+  - 02_HYSTERIA2_163_1501
+  - 03_HYSTERIA2_node_1501
   url: http://www.gstatic.com/generate_204
   interval: 300
 - name: 🌍 全球直连
