@@ -14,7 +14,23 @@ dns:
   - 8.8.8.8
   - 1.1.1.1
 proxies:
-- name: 01_HYSTERIA2_node_0937
+- name: 01_HYSTERIA2_191_1810
+  type: hysteria2
+  server: 62.210.70.191
+  port: 23556
+  password: github.com/Alvin9999-newpac/fanqiang
+  tls: true
+  sni: bing.com
+  skip-cert-verify: true
+- name: 02_HYSTERIA2_163_1810
+  type: hysteria2
+  server: 163.172.117.163
+  port: 36699
+  password: dongtaiwang.com
+  tls: true
+  sni: bing.com
+  skip-cert-verify: true
+- name: 03_HYSTERIA2_node_1810
   type: hysteria2
   server: 2001:bc8:32d7:17b::3
   port: 22000
@@ -27,12 +43,16 @@ proxy-groups:
   type: select
   proxies:
   - ⚡ 自动选择
-  - 01_HYSTERIA2_node_0937
+  - 01_HYSTERIA2_191_1810
+  - 02_HYSTERIA2_163_1810
+  - 03_HYSTERIA2_node_1810
   - DIRECT
 - name: ⚡ 自动选择
   type: url-test
   proxies:
-  - 01_HYSTERIA2_node_0937
+  - 01_HYSTERIA2_191_1810
+  - 02_HYSTERIA2_163_1810
+  - 03_HYSTERIA2_node_1810
   url: http://www.gstatic.com/generate_204
   interval: 300
 - name: 🌍 全球直连
