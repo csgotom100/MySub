@@ -14,7 +14,7 @@ dns:
   - 8.8.8.8
   - 1.1.1.1
 proxies:
-- name: 01_HYSTERIA2_132_1138
+- name: 01_HYSTERIA2_132_2139
   type: hysteria2
   server: 62.210.124.132
   port: 24667
@@ -22,15 +22,15 @@ proxies:
   tls: true
   sni: bing.com
   skip-cert-verify: true
-- name: 02_HYSTERIA2_191_1138
+- name: 02_HYSTERIA2_node_2139
   type: hysteria2
-  server: 62.210.70.191
-  port: 23556
-  password: github.com/Alvin9999-newpac/fanqiang
+  server: 2001:bc8:32d7:17b::17
+  port: 22000
+  password: dongtaiwang.com
   tls: true
-  sni: bing.com
+  sni: www.microsoft.com
   skip-cert-verify: true
-- name: 03_HYSTERIA2_41_1138
+- name: 03_HYSTERIA2_41_2139
   type: hysteria2
   server: 137.175.82.41
   port: 20022
@@ -38,7 +38,7 @@ proxies:
   tls: true
   sni: bing.com
   skip-cert-verify: true
-- name: 04_HYSTERIA2_42_1138
+- name: 04_HYSTERIA2_42_2139
   type: hysteria2
   server: 137.175.82.42
   port: 20022
@@ -46,7 +46,7 @@ proxies:
   tls: true
   sni: bing.com
   skip-cert-verify: true
-- name: 05_HYSTERIA2_node_1138
+- name: 05_HYSTERIA2_node_2139
   type: hysteria2
   server: 2001:bc8:32d7:17b::4
   port: 22000
@@ -54,7 +54,7 @@ proxies:
   tls: true
   sni: www.microsoft.com
   skip-cert-verify: true
-- name: 06_HYSTERIA2_node_1138
+- name: 06_HYSTERIA2_node_2139
   type: hysteria2
   server: 2001:bc8:32d7:17b::7
   port: 22000
@@ -67,22 +67,22 @@ proxy-groups:
   type: select
   proxies:
   - ⚡ 自动选择
-  - 01_HYSTERIA2_132_1138
-  - 02_HYSTERIA2_191_1138
-  - 03_HYSTERIA2_41_1138
-  - 04_HYSTERIA2_42_1138
-  - 05_HYSTERIA2_node_1138
-  - 06_HYSTERIA2_node_1138
+  - 01_HYSTERIA2_132_2139
+  - 02_HYSTERIA2_node_2139
+  - 03_HYSTERIA2_41_2139
+  - 04_HYSTERIA2_42_2139
+  - 05_HYSTERIA2_node_2139
+  - 06_HYSTERIA2_node_2139
   - DIRECT
 - name: ⚡ 自动选择
   type: url-test
   proxies:
-  - 01_HYSTERIA2_132_1138
-  - 02_HYSTERIA2_191_1138
-  - 03_HYSTERIA2_41_1138
-  - 04_HYSTERIA2_42_1138
-  - 05_HYSTERIA2_node_1138
-  - 06_HYSTERIA2_node_1138
+  - 01_HYSTERIA2_132_2139
+  - 02_HYSTERIA2_node_2139
+  - 03_HYSTERIA2_41_2139
+  - 04_HYSTERIA2_42_2139
+  - 05_HYSTERIA2_node_2139
+  - 06_HYSTERIA2_node_2139
   url: http://www.gstatic.com/generate_204
   interval: 300
 - name: 🌍 全球直连
